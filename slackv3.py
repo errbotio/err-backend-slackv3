@@ -663,6 +663,8 @@ class SlackBackend(ErrBot):
     def username_to_userid(self, name: str):
         """Convert a Slack user name to their user ID"""
         name = name.lstrip("@")
+        if name == self.auth['user']:
+            return self.bot_identifier.userid
         user = [
             user
             for user in self.slack_web.users_list()["members"]
@@ -1059,6 +1061,8 @@ class SlackBackend(ErrBot):
         if userid is not None and channelid is not None:
             return SlackRoomOccupant(self.slack_web, userid, channelid, bot=self)
         if userid is not None:
+            if userid == self.bot_identifier.userid:
+                return self.bot_identifier
             return SlackPerson(self.slack_web, userid, self.get_im_channel(userid))
         if channelid is not None:
             return SlackRoom(webclient=self.slack_web, channelid=channelid, bot=self)

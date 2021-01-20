@@ -988,6 +988,7 @@ class SlackBackend(ErrBot):
         Supports strings with the following formats::
 
             <#C12345>
+            <#C12345|channel>
             <@U12345>
             <@U12345|user>
             @user
@@ -1024,7 +1025,10 @@ class SlackBackend(ErrBot):
                 else:
                     userid = text
             elif text[0] in ("C", "G", "D"):
-                channelid = text
+                if '|' in text:
+                    channelid, channelname = text.split('|')
+                else:
+                    channelid = text
             else:
                 raise ValueError(exception_message % text)
         elif text[0] == "@":
@@ -1047,7 +1051,7 @@ class SlackBackend(ErrBot):
         Supports strings with the formats accepted by
         :func:`~extract_identifiers_from_string`.
         """
-        log.debug("building an identifier from %s.", txtrep)
+        log.debug(f"building an identifier from {txtrep}.")
         username, userid, channelname, channelid = self.extract_identifiers_from_string(
             txtrep
         )

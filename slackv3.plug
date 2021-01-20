@@ -1,0 +1,6 @@
+[Core]
+Name = SlackV3
+Module = slackv3
+
+[Documentation]
+Description = Backend for Slack's Real Time Messaging and Events APIs.

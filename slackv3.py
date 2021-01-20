@@ -1196,28 +1196,32 @@ class SlackBackend(ErrBot):
         Process mentions in a given string
         :returns:
             A formatted string of the original message
-            and a list of :class:`~SlackPerson` instances.
+            and a list of any :class:`~SlackPerson` or
+            :class:`~SlackRoom` instances.
         """
         mentioned = []
 
-        m = re.findall("<@[^>]*>*", text)
+        m = re.findall("<[@#][^>]*>*", text)
 
         for word in m:
             try:
                 identifier = self.build_identifier(word)
             except Exception as e:
                 log.debug(
-                    "Tried to build an identifier from '%s' but got exception: %s",
-                    word,
-                    e,
+                    f"Tried to build an identifier from '{word}' "
+                    f"but got exception: {e}"
                 )
                 continue
 
-            # We only track mentions of persons.
+            # We track mentions of persons and rooms.
             if isinstance(identifier, SlackPerson):
-                log.debug("Someone mentioned")
+                log.debug(f'Someone mentioned user {identifier}')
                 mentioned.append(identifier)
-                text = text.replace(word, str(identifier))
+                text = text.replace(word, f'@{identifier.userid}')
+            elif isinstance(identifier, SlackRoom):
+                log.debug(f'Someone mentioned channel {identifier}')
+                mentioned.append(identifier)
+                text = text.replace(word, f'#{identifier.channelid}')
 
         return text, mentioned
 

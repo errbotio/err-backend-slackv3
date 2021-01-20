@@ -828,7 +828,14 @@ class SlackBackend(ErrBot):
                 if "thread_ts" in msg.extras:
                     data["thread_ts"] = msg.extras["thread_ts"]
 
-                result = self.slack_web.chat_postMessage(**data)
+                if msg.extras.get('ephemeral'):
+                    data['user'] = msg.to.userid
+                    # undo divert / room to private
+                    if isinstance(msg.to, RoomOccupant):
+                        data['channel'] = msg.to.channelid
+                    result = self.slack_web.chat_postEphemeral(**data)
+                else:
+                    result = self.slack_web.chat_postMessage(**data)
                 timestamps.append(result["ts"])
 
             msg.extras["ts"] = timestamps

@@ -585,7 +585,13 @@ class SlackBackend(ErrBot):
                 "by Slack auto-expanding a link"
             )
             return
-        text = event["text"]
+
+        if 'message' in event:
+            text = event['message'].get('text', '')
+            user = event['message'].get('user', event.get('bot_id'))
+        else:
+            text = event.get('text', '')
+            user = event.get('user', event.get('bot_id'))
 
         text, mentioned = self.process_mentions(text)
 
@@ -609,28 +615,34 @@ class SlackBackend(ErrBot):
                     bot_id=event.get("bot_id"),
                     bot_username=event.get("username", ""),
                 )
+                msg.to = SlackPerson(webclient, user, channel)
             else:
-                msg.frm = SlackPerson(webclient, event["user"], event["channel"])
-            msg.to = SlackPerson(
-                webclient, self.bot_identifier.userid, event["channel"]
-            )
-            channel_link_name = event["channel"]
+                if user == self.bot_identifier.userid:
+                    msg.frm = self.bot_identifier
+                    msg.to = self.bot_identifier
+                else:
+                    msg.frm = SlackPerson(webclient, user, channel)
+                    msg.to = msg.frm
+            channel_link_name = channel
         else:
             if subtype == "bot_message":
                 msg.frm = SlackRoomBot(
                     webclient,
                     bot_id=event.get("bot_id"),
                     bot_username=event.get("username", ""),
-                    channelid=event["channel"],
+                    channelid=channel,
                     bot=self,
                 )
+                msg.to = SlackRoom(webclient=webclient, channelid=channel, bot=self)
             else:
-                msg.frm = SlackRoomOccupant(
-                    webclient, event["user"], event["channel"], bot=self
-                )
-            msg.to = SlackRoom(
-                webclient=webclient, channelid=event["channel"], bot=self
-            )
+                if user == self.bot_identifier.userid:
+                    msg.frm = self.bot_identifier
+                    msg.to = self.bot_identifier
+                else:
+                    msg.to = SlackRoom(webclient=webclient, channelid=channel, bot=self)
+                    msg.frm = SlackRoomOccupant(
+                        webclient, user, channel, self
+                    )
             channel_link_name = msg.to.name
 
         # TODO: port to slack_sdk
@@ -663,6 +675,8 @@ class SlackBackend(ErrBot):
     def username_to_userid(self, name: str):
         """Convert a Slack user name to their user ID"""
         name = name.lstrip("@")
+        if name == self.auth['user']:
+            return self.bot_identifier.userid
         user = [
             user
             for user in self.slack_web.users_list()["members"]
@@ -1070,6 +1084,8 @@ class SlackBackend(ErrBot):
         if userid is not None and channelid is not None:
             return SlackRoomOccupant(self.slack_web, userid, channelid, bot=self)
         if userid is not None:
+            if userid == self.bot_identifier.userid:
+                return self.bot_identifier
             return SlackPerson(self.slack_web, userid, self.get_im_channel(userid))
         if channelid is not None:
             return SlackRoom(webclient=self.slack_web, channelid=channelid, bot=self)

@@ -995,6 +995,7 @@ class SlackBackend(ErrBot):
         Supports strings with the following formats::
 
             <#C12345>
+            <#C12345|channel>
             <@U12345>
             <@U12345|user>
             @user
@@ -1031,7 +1032,10 @@ class SlackBackend(ErrBot):
                 else:
                     userid = text
             elif text[0] in ("C", "G", "D"):
-                channelid = text
+                if '|' in text:
+                    channelid, channelname = text.split('|')
+                else:
+                    channelid = text
             else:
                 raise ValueError(exception_message % text)
         elif text[0] == "@":
@@ -1054,7 +1058,7 @@ class SlackBackend(ErrBot):
         Supports strings with the formats accepted by
         :func:`~extract_identifiers_from_string`.
         """
-        log.debug("building an identifier from %s.", txtrep)
+        log.debug(f"building an identifier from {txtrep}.")
         username, userid, channelname, channelid = self.extract_identifiers_from_string(
             txtrep
         )
@@ -1203,28 +1207,32 @@ class SlackBackend(ErrBot):
         Process mentions in a given string
         :returns:
             A formatted string of the original message
-            and a list of :class:`~SlackPerson` instances.
+            and a list of any :class:`~SlackPerson` or
+            :class:`~SlackRoom` instances.
         """
         mentioned = []
 
-        m = re.findall("<@[^>]*>*", text)
+        m = re.findall("<[@#][^>]*>*", text)
 
         for word in m:
             try:
                 identifier = self.build_identifier(word)
             except Exception as e:
                 log.debug(
-                    "Tried to build an identifier from '%s' but got exception: %s",
-                    word,
-                    e,
+                    f"Tried to build an identifier from '{word}' "
+                    f"but got exception: {e}"
                 )
                 continue
 
-            # We only track mentions of persons.
+            # We track mentions of persons and rooms.
             if isinstance(identifier, SlackPerson):
-                log.debug("Someone mentioned")
+                log.debug(f'Someone mentioned user {identifier}')
                 mentioned.append(identifier)
-                text = text.replace(word, str(identifier))
+                text = text.replace(word, f'@{identifier.userid}')
+            elif isinstance(identifier, SlackRoom):
+                log.debug(f'Someone mentioned channel {identifier}')
+                mentioned.append(identifier)
+                text = text.replace(word, f'#{identifier.channelid}')
 
         return text, mentioned
 

@@ -5,7 +5,6 @@ import pprint
 import re
 import sys
 from functools import lru_cache
-from time import sleep
 from typing import BinaryIO
 
 from errbot.backends.base import (
@@ -29,12 +28,17 @@ from errbot.core import ErrBot
 from errbot.core_plugins import flask_app
 from errbot.utils import split_string_after
 
+log = logging.getLogger(__name__)
+
 try:
     from slack_sdk.errors import BotUserAccessError, SlackApiError
     from slack_sdk.oauth import AuthorizeUrlGenerator
     from slack_sdk.rtm import RTMClient
     from slack_sdk.web import WebClient
     from slack_sdk.webhook import WebhookClient
+    from slack_sdk.socket_mode import SocketModeClient
+    from slack_sdk.socket_mode.response import SocketModeResponse
+    from slack_sdk.socket_mode.request import SocketModeRequest
     from slackeventsapi import SlackEventAdapter
 
 except ImportError:
@@ -45,10 +49,8 @@ except ImportError:
     )
     sys.exit(1)
 
-from ._slack.markdown import slack_markdown_converter
-from ._slack.person import SlackPerson
-
-log = logging.getLogger(__name__)
+from _slack.markdown import slack_markdown_converter
+from _slack.person import SlackPerson
 
 
 # The Slack client automatically turns a channel name into a clickable
@@ -186,17 +188,19 @@ class SlackBackend(ErrBot):
         if not self.token:
             log.fatal(
                 'You need to set your token (found under "Bot Integration" on Slack) in '
-                "the BOT_IDENTITY setting in your configuration. Without this token I "
+                "the BOT_IDENTITY setting in your configuration.  Without this token I "
                 "cannot connect to Slack."
             )
             sys.exit(1)
 
         self.signing_secret = identity.get("signing_secret", None)
+        self.app_token = identity.get("app_token", None)
 
-        # Slack objects will be initialised in the serve_forever method.
+        # Slack objects will be initialised in the serve_once method.
         self.slack_web = None
         self.slack_rtm = None
         self.slack_events = None
+        self.slack_socket_mode = None
         self.bot_identifier = None
 
         compact = config.COMPACT_OUTPUT if hasattr(config, "COMPACT_OUTPUT") else False
@@ -249,15 +253,13 @@ class SlackBackend(ErrBot):
                 converted_prefixes.append(f"<@{self.username_to_userid(prefix)}>")
             except Exception as e:
                 log.error(
-                    'Failed to look up Slack userid for alternate prefix "%s": %s',
-                    prefix,
-                    e,
+                    f'Failed to look up Slack userid for alternate prefix "{prefix}": {str(e)}'
                 )
 
         self.bot_alt_prefixes = tuple(
             x.lower() for x in self.bot_config.BOT_ALT_PREFIXES
         )
-        log.debug("Converted bot_alt_prefixes: %s", self.bot_config.BOT_ALT_PREFIXES)
+        log.debug(f"Converted bot_alt_prefixes: {self.bot_config.BOT_ALT_PREFIXES}")
 
     def _setup_rtm_callbacks(self):
         rtm_events = [
@@ -449,11 +451,9 @@ class SlackBackend(ErrBot):
         # Inject bot identity to alternative prefixes
         self.update_alternate_prefixes()
 
-        # detect api type based on auth_test response
-        is_rtm_api = "bot:basic" in self.auth.headers["x-oauth-scopes"]
-
-        if is_rtm_api:
-            log.info("Using RTM API")
+        # detect api type based on auth_test response (bot:basic is a legacy token scope for RTM)
+        if "bot:basic" in self.auth.headers["x-oauth-scopes"]:
+            log.info("Using RTM API.")
             self.slack_rtm = RTMClient(
                 token=self.token, proxy=self.proxies, auto_reconnect=False
             )
@@ -467,28 +467,46 @@ class SlackBackend(ErrBot):
                 self._setup_rtm_callbacks()
 
         else:
-            if not self.signing_secret:
-                log.fatal(
-                    'You need to set your signing_secret (found under "Bot Integration" on Slack)'
-                    " in the BOT_IDENTITY setting in your configuration. Without this secret I "
-                    "cannot receive events from Slack."
+            # If the Application token is set, run in socket mode otherwise use Request URL.
+            if self.app_token:
+                log.info("Using Events API - Socket mode client.")
+                self.slack_socket_mode = SocketModeClient(
+                    app_token=self.app_token,
+                    web_client=self.slack_web,
+                    trace_enabled=True,
+                    ping_pong_trace_enabled=False,
+                    on_message_listeners=[self._sm_handle_hello],
                 )
-                sys.exit(1)
-            log.info("Using Events API")
-            self.slack_events = SlackEventAdapter(
-                self.signing_secret, "/slack/events", flask_app
-            )
-            self._setup_event_callbacks()
+                self.slack_socket_mode.message_listeners.append(self._sm_handle_hello)
+                self.slack_socket_mode.socket_mode_request_listeners.append(
+                    self._sm_generic_event_handler
+                )
+                # TODO: The socket_mode listener will need to gracefully handle disconnections.
+                self.slack_socket_mode.connect()
+            else:
+                log.info("Using Events API - HTTP listener for request URLs.")
+                if not self.signing_secret:
+                    log.fatal(
+                        'You need to set your signing_secret (found under "Bot Integration" on Slack)'
+                        " in the BOT_IDENTITY setting in your configuration. Without this secret I "
+                        "cannot receive events from Slack."
+                    )
+                    sys.exit(1)
+                self.slack_events = SlackEventAdapter(
+                    self.signing_secret, "/slack/events", flask_app
+                )
+                self._setup_event_callbacks()
 
         try:
-            if is_rtm_api:
+            if self.slack_rtm is not None:
                 log.info("Connecting to Slack RTM API")
-                self.slack_rtm.connect()
-                log.info("************** UNBLOCKED **************")
+                self.slack_rtm.start()
             else:
-                log.debug("Initialized, waiting for events")
-                while True:
-                    sleep(1)
+                log.debug("Initialised, waiting for events.")
+                # Block here to remain in serve_once().
+                from threading import Event
+
+                Event().wait()
         except KeyboardInterrupt:
             log.info("Interrupt received, shutting down..")
             return True
@@ -508,7 +526,38 @@ class SlackBackend(ErrBot):
             event_handler = getattr(self, f"_handle_{event_type}")
             return event_handler(self.slack_web, event)
         except AttributeError:
-            log.info(f"Event type {event_type} not supported")
+            log.info(f"Event type {event_type} not supported.")
+
+    def _sm_generic_event_handler(
+        self, client: SocketModeClient, req: SocketModeRequest
+    ):
+        log.debug(
+            f"Event type: {req.type}\n"
+            f"Envelope ID: {req.envelope_id}\n"
+            f"Accept Response Payload: {req.accepts_response_payload}\n"
+            f"Retry Attempt: {req.retry_attempt}\n"
+            f"Retry Reason: {req.retry_reason}\n"
+        )
+        # Acknowledge the request
+        client.send_socket_mode_response(
+            SocketModeResponse(envelope_id=req.envelope_id)
+        )
+        # Dispatch event to the Event API generic event handler.
+        self._generic_wrapper(req.payload)
+
+    def _sm_handle_hello(self, *args):
+        # Workaround socket-mode client calling handler twice with different signatures.
+        if len(args) == 3:
+            sm_client, event, raw_event = args
+            log.debug(f"message listeners : {sm_client.message_listeners}")
+            if event["type"] == "hello":
+                self.connect_callback()
+                self.callback_presence(
+                    Presence(identifier=self.bot_identifier, status=ONLINE)
+                )
+                # Stop calling hello handler for future events.
+                sm_client.message_listeners.remove(self._sm_handle_hello)
+                log.info("Unregistered 'hello' handler from socket-mode client")
 
     def _rtm_handle_hello(self, **payload):
         """Event handler for the 'hello' event"""
@@ -582,16 +631,16 @@ class SlackBackend(ErrBot):
             # message. This is not what we want).
             log.debug(
                 "Ignoring message_changed event with attachments, likely caused "
-                "by Slack auto-expanding a link"
+                "by Slack auto-expanding a link."
             )
             return
 
-        if 'message' in event:
-            text = event['message'].get('text', '')
-            user = event['message'].get('user', event.get('bot_id'))
+        if "message" in event:
+            text = event["message"].get("text", "")
+            user = event["message"].get("user", event.get("bot_id"))
         else:
-            text = event.get('text', '')
-            user = event.get('user', event.get('bot_id'))
+            text = event.get("text", "")
+            user = event.get("user", event.get("bot_id"))
 
         text, mentioned = self.process_mentions(text)
 
@@ -640,9 +689,7 @@ class SlackBackend(ErrBot):
                     msg.to = self.bot_identifier
                 else:
                     msg.to = SlackRoom(webclient=webclient, channelid=channel, bot=self)
-                    msg.frm = SlackRoomOccupant(
-                        webclient, user, channel, self
-                    )
+                    msg.frm = SlackRoomOccupant(webclient, user, channel, self)
             channel_link_name = msg.to.name
 
         # TODO: port to slack_sdk
@@ -675,7 +722,7 @@ class SlackBackend(ErrBot):
     def username_to_userid(self, name: str):
         """Convert a Slack user name to their user ID"""
         name = name.lstrip("@")
-        if name == self.auth['user']:
+        if name == self.auth["user"]:
             return self.bot_identifier.userid
         user = [
             user
@@ -842,11 +889,11 @@ class SlackBackend(ErrBot):
                 if "thread_ts" in msg.extras:
                     data["thread_ts"] = msg.extras["thread_ts"]
 
-                if msg.extras.get('ephemeral'):
-                    data['user'] = msg.to.userid
+                if msg.extras.get("ephemeral"):
+                    data["user"] = msg.to.userid
                     # undo divert / room to private
                     if isinstance(msg.to, RoomOccupant):
-                        data['channel'] = msg.to.channelid
+                        data["channel"] = msg.to.channelid
                     result = self.slack_web.chat_postEphemeral(**data)
                 else:
                     result = self.slack_web.chat_postMessage(**data)
@@ -1046,8 +1093,8 @@ class SlackBackend(ErrBot):
                 else:
                     userid = text
             elif text[0] in ("C", "G", "D"):
-                if '|' in text:
-                    channelid, channelname = text.split('|')
+                if "|" in text:
+                    channelid, channelname = text.split("|")
                 else:
                     channelid = text
             else:
@@ -1242,13 +1289,13 @@ class SlackBackend(ErrBot):
 
             # We track mentions of persons and rooms.
             if isinstance(identifier, SlackPerson):
-                log.debug(f'Someone mentioned user {identifier}')
+                log.debug(f"Someone mentioned user {identifier}")
                 mentioned.append(identifier)
-                text = text.replace(word, f'@{identifier.userid}')
+                text = text.replace(word, f"@{identifier.userid}")
             elif isinstance(identifier, SlackRoom):
-                log.debug(f'Someone mentioned channel {identifier}')
+                log.debug(f"Someone mentioned channel {identifier}")
                 mentioned.append(identifier)
-                text = text.replace(word, f'#{identifier.channelid}')
+                text = text.replace(word, f"#{identifier.channelid}")
 
         return text, mentioned
 

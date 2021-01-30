@@ -20,10 +20,7 @@ jobs:
           python-version: "3.9"
       - name: install deps
         run: |
-          pip install errbot[slack] mock
+          pip install errbot[slack] mock pytest pytest-pep8 coverage
           pip install -r requirements.txt
       - name: test
-        run: |
-          python tests/_slack/person_test.py
-          python tests/_slack/markdown_test.py
-
+        run: coverage run --source slackv3 -m py.test --pep8

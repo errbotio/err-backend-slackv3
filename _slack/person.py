@@ -15,22 +15,21 @@ class SlackPerson(Person):
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
         if userid is not None and userid[0] not in ("U", "B", "W"):
             raise Exception(
-                f"This is not a Slack user or bot id: {userid} (should start with U, B or W)"
+                f"This is not a Slack user or bot id: {userid} "
+                "(should start with U, B or W)"
             )
 
         if channelid is not None and channelid[0] not in ("D", "C", "G"):
             raise Exception(
-                f"This is not a valid Slack channelid: {channelid} (should start with D, C or G)"
+                f"This is not a valid Slack channelid: {channelid} "
+                "(should start with D, C or G)"
             )
 
         self._userid = userid
         self._channelid = channelid
-        self._webclient = webclient
-        self._username = None  # cache
-        self._fullname = None
-        self._email = None
         self._channelname = None
-        self._email = None
+        self._webclient = webclient
+        self._profile = None
 
     @property
     def userid(self):
@@ -39,44 +38,35 @@ class SlackPerson(Person):
     @property
     def username(self):
         """Convert a Slack user ID to their user name"""
-        if self._username:
-            return self._username
-        self._get_user_info()
-        if self._username is None:
-            return f"<{self._userid}>"
-        return self._username
+        if self._profile:
+            return (self._profile['display_name_normalized'] or
+                    self._profile['real_name_normalized'])
+        return self._get_user_info('username')
 
     @property
     def fullname(self):
         """Convert a Slack user ID to their full name"""
-        if self._fullname:
-            return self._fullname
-        self._get_user_info()
-        if self._fullname is None:
-            return f"<{self._userid}>"
-        return self._fullname
+        if self._profile:
+            return self._profile['real_name']
+        return self._get_user_info('fullname')
 
     @property
     def email(self):
         """Convert a Slack user ID to their user email"""
-        if self._email:
-            return self._email
-        self._get_user_info()
-        if self._email is None:
-            return "<%s>" % self._userid
-        return self._email
+        if self._profile:
+            return self._profile.get('email', None)
+        return self._get_user_info('email')
 
-    def _get_user_info(self):
-        """Cache all user info"""
+    def _get_user_info(self, retdata):
+        """Cache all user info and return data"""
         user = self._webclient.users_info(user=self._userid)["user"]
 
         if user is None:
-            log.error("Cannot find user with ID %s" % self._userid)
-            return
+            log.error(f"Cannot find user with ID {self._userid}")
+            return f"<{self._userid}>"
 
-        self._email = user["profile"].get("email", "not available")
-        self._fullname = user["real_name"]
-        self._username = user["name"]
+        self._profile = user['profile']
+        return getattr(self, retdata)
 
     @property
     def channelid(self):
@@ -98,10 +88,11 @@ class SlackPerson(Person):
         ]
 
         if not channel:
-            raise RoomDoesNotExistError(f"No channel with ID {self._channelid} exists.")
+            raise RoomDoesNotExistError(
+                f"No channel with ID {self._channelid} exists."
+            )
 
-        if not self._channelname:
-            self._channelname = channel[0]["name"]
+        self._channelname = channel[0]["name"]
         return self._channelname
 
     @property
@@ -117,7 +108,7 @@ class SlackPerson(Person):
     def aclattr(self):
         # Note: Don't use str(self) here because that will return
         # an incorrect format from SlackMUCOccupant.
-        return f"@{self.username}"
+        return f"@{self.userid}"
 
     person = aclattr
 
@@ -129,7 +120,7 @@ class SlackPerson(Person):
 
     def __eq__(self, other):
         if not isinstance(other, SlackPerson):
-            log.warning("tried to compare a SlackPerson with a %s", type(other))
+            log.warning(f"tried to compare a SlackPerson with a {type(other)}")
             return False
         return other.userid == self.userid
 

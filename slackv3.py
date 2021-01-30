@@ -759,7 +759,8 @@ class SlackBackend(ErrBot):
             raise RoomDoesNotExistError(f"No channel named {name} exists")
         return channel[0]["id"]
 
-    def channels(self, exclude_archived=True, joined_only=False):
+    def channels(self, exclude_archived=True, joined_only=False,
+                 types="public_channel,private_channel"):
         """
         Get all channels and groups and return information about them.
 
@@ -767,26 +768,25 @@ class SlackBackend(ErrBot):
             Exclude archived channels/groups
         :param joined_only:
             Filter out channels the bot hasn't joined
+        :param types:
+            Channel / Group types to search
         :returns:
-            Lists all channels in a Slack team and conversations the calling user may access.
+            Lists all channels in a Slack team.
             References:
                 - https://slack.com/api/conversations.list
-                - https://slack.com/api/users.conversations
         """
-        response = self.slack_web.conversations_list(exclude_archived=exclude_archived)
+        response = self.slack_web.conversations_list(
+            exclude_archived=exclude_archived,
+            types=types
+        )
+
         channels = [
             channel
             for channel in response["channels"]
             if channel["is_member"] or not joined_only
         ]
 
-        response = self.slack_web.users_conversations(exclude_archived=exclude_archived)
-        # No need to filter for 'is_member' in this next call (it doesn't
-        # (even exist) because leaving a group means you have to get invited
-        # back again by somebody else.
-        groups = [group for group in response["groups"]]
-
-        return channels + groups
+        return channels
 
     @lru_cache(1024)
     def get_im_channel(self, id_):

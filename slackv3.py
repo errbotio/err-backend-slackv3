@@ -759,7 +759,8 @@ class SlackBackend(ErrBot):
             raise RoomDoesNotExistError(f"No channel named {name} exists")
         return channel[0]["id"]
 
-    def channels(self, exclude_archived=True, joined_only=False):
+    def channels(self, exclude_archived=True, joined_only=False,
+                 types="public_channel,private_channel"):
         """
         Get all channels and groups and return information about them.
 
@@ -767,12 +768,17 @@ class SlackBackend(ErrBot):
             Exclude archived channels/groups
         :param joined_only:
             Filter out channels the bot hasn't joined
+        :param types:
+            Channel / Group types to search
         :returns:
             Lists all channels in a Slack team.
             References:
                 - https://slack.com/api/conversations.list
         """
-        response = self.slack_web.conversations_list(exclude_archived=exclude_archived)
+        response = self.slack_web.conversations_list(
+            exclude_archived=exclude_archived,
+            types=types
+        )
 
         channels = [
             channel

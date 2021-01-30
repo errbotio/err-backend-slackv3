@@ -75,24 +75,24 @@ class SlackPerson(Person):
     @property
     def channelname(self):
         """Convert a Slack channel ID to its channel name"""
-        if self._channelid is None:
+        if self.channelid is None:
             return None
 
         if self._channelname:
             return self._channelname
 
-        channel = [
-            channel
-            for channel in self._webclient.conversations_list()["channels"]
-            if channel["id"] == self._channelid
-        ]
+        channel = self._webclient.conversations_info(channel=self.channelid)
 
-        if not channel:
+        if not channel or not channel['ok']:
             raise RoomDoesNotExistError(
                 f"No channel with ID {self._channelid} exists."
             )
+        channel = channel['channel']
 
-        self._channelname = channel[0]["name"]
+        if channel['is_im']:
+            self._channelname = channel["user"]
+        else:
+            self._channelname = channel["name"]
         return self._channelname
 
     @property

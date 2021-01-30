@@ -22,9 +22,6 @@ jobs:
         run: |
           pip install errbot[slack] mock
           pip install -r requirements.txt
-      - name: setup local package
-        run: |
-          cp -rv _slack $HOME/.local/lib/python3.9/site-packages/errbot/backends/
       - name: test
         run: |
           python tests/_slack/person_test.py

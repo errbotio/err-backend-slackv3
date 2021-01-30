@@ -5,7 +5,10 @@ import os
 from tempfile import mkdtemp
 from mock import MagicMock
 
-from errbot.backends._slack.markdown import *
+try:
+    from errbot.backends._slack.markdown import *
+except ImportError:
+    from ._slack.markdown import *
 
 
 log = logging.getLogger(__name__)

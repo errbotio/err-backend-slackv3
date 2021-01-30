@@ -23,4 +23,4 @@ jobs:
           pip install errbot[slack] mock pytest pytest-pep8 coverage
           pip install -r requirements.txt
       - name: test
-        run: coverage run --source slackv3 -m py.test --pep8
+        run: coverage run slackv3.py --pep8

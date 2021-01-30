@@ -17,6 +17,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: install deps
         run: |
+          apt update && apt install -y python3 python3-dev
           pip install errbot
           pip install -r requirements.txt
       - name: test

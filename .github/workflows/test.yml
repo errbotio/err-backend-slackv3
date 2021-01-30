@@ -22,7 +22,7 @@ jobs:
           pip install -r requirements.txt
       - name: setup local package
         run: |
-          ln -s _slack .local/lib/python3.8/site-packages/errbot/backends/
+          ln -s _slack $HOME/.local/lib/python3.8/site-packages/errbot/backends/
       - name: test
         run: find tests -name '*.py' -exec python {} \;
 

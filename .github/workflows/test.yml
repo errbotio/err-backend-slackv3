@@ -18,7 +18,7 @@ jobs:
       - name: install deps
         run: |
           sudo apt update && sudo apt install -y python3 python3-dev
-          pip install errbot
+          pip install errbot mock
           pip install -r requirements.txt
       - name: test
         run: find tests -name '*.py' -exec python {} \;

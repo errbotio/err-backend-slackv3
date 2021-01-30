@@ -1,0 +1,24 @@
+name: Test
+
+on:
+  push:
+    branches: '**'
+    paths-ignore:
+      - '*.md'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install deps
+        run: |
+          pip install errbot
+          pip install -r requirements.txt
+      - name: test
+        run: find tests -name '*.py' -exec python {} \;
+

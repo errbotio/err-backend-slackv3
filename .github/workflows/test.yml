@@ -24,5 +24,6 @@ jobs:
           pip install -r requirements.txt
       - name: test
         run: |
-          coverage run -m unittest discover
+          coverage run --source=$PWD tests/person_test.py
+          coverage run slackv3.py --pep8
           coverage report -m

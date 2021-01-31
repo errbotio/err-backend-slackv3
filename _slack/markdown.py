@@ -27,7 +27,8 @@ def slack_markdown_converter(compact_output=False):
 class LinkPreProcessor(Preprocessor):
     """
     This preprocessor converts markdown URL notation into Slack URL notation
-    as described at https://api.slack.com/docs/formatting, section "Linking to URLs".
+    as described at https://api.slack.com/docs/formatting,
+    section "Linking to URLs".
     """
 
     def run(self, lines):

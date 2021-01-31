@@ -24,6 +24,5 @@ jobs:
           pip install -r requirements.txt
       - name: test
         run: |
-          coverage run --source=.,_slack tests/_slack/person_test.py
           coverage run slackv3.py --pep8
           coverage report -m

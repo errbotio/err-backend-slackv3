@@ -451,8 +451,18 @@ class SlackBackend(ErrBot):
         # Inject bot identity to alternative prefixes
         self.update_alternate_prefixes()
 
-        # detect api type based on auth_test response (bot:basic is a legacy token scope for RTM)
-        if "bot:basic" in self.auth.headers["x-oauth-scopes"]:
+        # detect legacy and classic bot based on auth_test response (https://api.slack.com/scopes)
+        if set(
+            [
+                "bot",
+                "bot:basic",
+                "client",
+                "files:write:user",
+                "identify",
+                "post",
+                "read",
+            ]
+        ).issuperset(self.auth.headers["x-oauth-scopes"].split(",")):
             log.info("Using RTM API.")
             self.slack_rtm = RTMClient(
                 token=self.token, proxy=self.proxies, auto_reconnect=False
@@ -759,8 +769,12 @@ class SlackBackend(ErrBot):
             raise RoomDoesNotExistError(f"No channel named {name} exists")
         return channel[0]["id"]
 
-    def channels(self, exclude_archived=True, joined_only=False,
-                 types="public_channel,private_channel"):
+    def channels(
+        self,
+        exclude_archived=True,
+        joined_only=False,
+        types="public_channel,private_channel",
+    ):
         """
         Get all channels and groups and return information about them.
 
@@ -776,8 +790,7 @@ class SlackBackend(ErrBot):
                 - https://slack.com/api/conversations.list
         """
         response = self.slack_web.conversations_list(
-            exclude_archived=exclude_archived,
-            types=types
+            exclude_archived=exclude_archived, types=types
         )
 
         channels = [

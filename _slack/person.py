@@ -29,44 +29,65 @@ class SlackPerson(Person):
         self._channelid = channelid
         self._channelname = None
         self._webclient = webclient
-        self._profile = None
+        self._info = None
 
     @property
     def userid(self):
         return self._userid
 
     @property
+    def info(self):
+        """
+        Return the user info, but load it if we didn't do it yet.
+
+        :rtype: dict[str, any]
+        :return: the user info
+        """
+        if not self._info:
+            self._info = self._get_user_info()
+        return self._info
+
+    @property
     def username(self):
         """Convert a Slack user ID to their user name"""
-        if self._profile:
-            return (self._profile['display_name_normalized'] or
-                    self._profile['real_name_normalized'])
-        return self._get_user_info('username')
+        profile = self.info.get("profile")
+        if profile:
+            return profile['display_name_normalized'] or profile['real_name_normalized']
+        else:
+            return self.info["name"]
 
     @property
     def fullname(self):
         """Convert a Slack user ID to their full name"""
-        if self._profile:
-            return self._profile['real_name']
-        return self._get_user_info('fullname')
+        profile = self.info.get("profile")
+        if profile:
+            return profile['real_name']
+        else:
+            return self.info["real_name"]
 
     @property
     def email(self):
         """Convert a Slack user ID to their user email"""
-        if self._profile:
-            return self._profile.get('email', None)
-        return self._get_user_info('email')
+        profile = self.info.get("profile")
+        if profile:
+            # 'email' might not tbe there
+            return profile.get('email')
+        else:
+            # 'email' might not the there
+            return self.info.get('email')
 
-    def _get_user_info(self, retdata):
-        """Cache all user info and return data"""
-        user = self._webclient.users_info(user=self._userid)["user"]
+    def _get_user_info(self):
+        """
+        Cache all user info and return data.
 
-        if user is None:
+        :rtype: dict[str, any]
+        :return: the user info
+        """
+        user_info = self._webclient.users_info(user=self._userid)["user"]
+        if user_info is None:
             log.error(f"Cannot find user with ID {self._userid}")
             return f"<{self._userid}>"
-
-        self._profile = user['profile']
-        return getattr(self, retdata)
+        return user_info
 
     @property
     def channelid(self):
@@ -108,7 +129,7 @@ class SlackPerson(Person):
     def aclattr(self):
         # Note: Don't use str(self) here because that will return
         # an incorrect format from SlackMUCOccupant.
-        return f"{self.userid}"
+        return f"@{self.username}"
 
     person = aclattr
 

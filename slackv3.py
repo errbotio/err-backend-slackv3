@@ -2,6 +2,8 @@ import copyreg
 import json
 import logging
 import pprint
+import asyncio
+import threading
 import re
 import sys
 from functools import lru_cache
@@ -434,6 +436,27 @@ class SlackBackend(ErrBot):
 
         self.connect_callback()
 
+    def run_rtm_in_thread(self):
+        """
+        This method is run inside a seperate thread to prevent RTMClient signal handlers from
+        interfering with Python's default signal handlers that errbot depends on.
+        """
+        self.rtm_loop = asyncio.new_event_loop()
+        self.slack_rtm = RTMClient(
+            token=self.token, proxy=self.proxies, auto_reconnect=False, loop=self.rtm_loop
+        )
+
+        @RTMClient.run_on(event="open")
+        def get_bot_identity(**payload):
+            self.bot_identifier = SlackPerson(
+                payload["web_client"], payload["data"]["self"]["id"]
+            )
+            # only hook up the message callback once we have our identity set.
+            self._setup_rtm_callbacks()
+
+        log.info("Connecting to Slack RTM API")
+        self.slack_rtm.start()
+
     def serve_once(self):
         self.slack_web = WebClient(token=self.token, proxy=self.proxies)
 
@@ -454,18 +477,8 @@ class SlackBackend(ErrBot):
         # detect api type based on auth_test response (bot:basic is a legacy token scope for RTM)
         if "bot:basic" in self.auth.headers["x-oauth-scopes"]:
             log.info("Using RTM API.")
-            self.slack_rtm = RTMClient(
-                token=self.token, proxy=self.proxies, auto_reconnect=False
-            )
-
-            @RTMClient.run_on(event="open")
-            def get_bot_identity(**payload):
-                self.bot_identifier = SlackPerson(
-                    payload["web_client"], payload["data"]["self"]["id"]
-                )
-                # only hook up the message callback once we have our identity set.
-                self._setup_rtm_callbacks()
-
+            rtm_thread = threading.Thread(None, target=self.run_rtm_in_thread)
+            rtm_thread.start()
         else:
             # If the Application token is set, run in socket mode otherwise use Request URL.
             if self.app_token:
@@ -473,8 +486,6 @@ class SlackBackend(ErrBot):
                 self.slack_socket_mode = SocketModeClient(
                     app_token=self.app_token,
                     web_client=self.slack_web,
-                    trace_enabled=True,
-                    ping_pong_trace_enabled=False,
                     on_message_listeners=[self._sm_handle_hello],
                 )
                 self.slack_socket_mode.message_listeners.append(self._sm_handle_hello)
@@ -498,15 +509,9 @@ class SlackBackend(ErrBot):
                 self._setup_event_callbacks()
 
         try:
-            if self.slack_rtm is not None:
-                log.info("Connecting to Slack RTM API")
-                self.slack_rtm.start()
-            else:
-                log.debug("Initialised, waiting for events.")
-                # Block here to remain in serve_once().
-                from threading import Event
-
-                Event().wait()
+            log.debug("Initialised, waiting for events.")
+            # Block here to remain in serve_once().
+            threading.Event().wait()
         except KeyboardInterrupt:
             log.info("Interrupt received, shutting down..")
             return True
@@ -569,6 +574,8 @@ class SlackBackend(ErrBot):
         """Handle Slack server's intention to close the connection"""
         log.info("Received 'goodbye' from slack server.")
         self.slack_rtm.stop()
+        self.rtm_loop.stop()
+        self.disconnect_callback()
 
     def _rtm_handle_reaction_added(self, **payload):
         self._handle_reaction_added(payload["web_client"], payload["data"])

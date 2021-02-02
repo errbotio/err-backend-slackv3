@@ -658,6 +658,10 @@ class SlackBackend(ErrBot):
             text = event.get("text", "")
             user = event.get("user", event.get("bot_id"))
 
+        if (event['type'] == 'app_mention' and not event['channel'].startswith('G')):
+            log.debug('Ignoring app_mention event on non-private channel, message event will handle it.')
+            return
+
         text, mentioned = self.process_mentions(text)
 
         text = self.sanitize_uris(text)

@@ -456,6 +456,7 @@ class SlackBackend(ErrBot):
         # detect legacy and classic bot based on auth_test response (https://api.slack.com/scopes)
         if set(
             [
+                "apps",
                 "bot",
                 "bot:basic",
                 "client",

@@ -432,7 +432,8 @@ class SlackBackend(ErrBot):
             "workflow_step_execute",
         ]
         for t in slack_event_types:
-            self.slack_events.on(t, self._generic_wrapper)
+            # slacksdk checks for duplicates only when passing a list of callbacks
+            self.slack_events.on(t, [self._generic_wrapper])
 
         self.connect_callback()
 

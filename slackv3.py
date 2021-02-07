@@ -345,7 +345,7 @@ class SlackBackend(ErrBot):
         for event_type in rtm_events:
             try:
                 event_handler = getattr(self, f"_rtm_handle_{event_type}")
-                self.slack_rtm.on(event=event_type, callback=event_handler)
+                self.slack_rtm.on(event=event_type, callback=[event_handler])
             except AttributeError:
                 pass
 
@@ -433,7 +433,7 @@ class SlackBackend(ErrBot):
         ]
         for t in slack_event_types:
             # slacksdk checks for duplicates only when passing a list of callbacks
-            self.slack_events.on(t, [self._generic_wrapper])
+            self.slack_events.on(t, self._generic_wrapper)
 
         self.connect_callback()
 

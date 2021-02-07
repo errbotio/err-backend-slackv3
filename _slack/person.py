@@ -108,7 +108,7 @@ class SlackPerson(Person):
     def aclattr(self):
         # Note: Don't use str(self) here because that will return
         # an incorrect format from SlackMUCOccupant.
-        return f"@{self.userid}"
+        return f"{self.userid}"
 
     person = aclattr
 

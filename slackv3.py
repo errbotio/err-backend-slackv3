@@ -604,7 +604,6 @@ class SlackBackend(ErrBot):
                 else:
                     msg.frm = SlackPerson(webclient, user, channel)
                     msg.to = msg.frm
-            channel_link_name = channel
         else:
             if subtype == "bot_message":
                 msg.frm = SlackRoomBot(
@@ -622,7 +621,6 @@ class SlackBackend(ErrBot):
                 else:
                     msg.to = SlackRoom(webclient=webclient, channelid=channel, bot=self)
                     msg.frm = SlackRoomOccupant(webclient, user, channel, self)
-            channel_link_name = msg.to.name
 
         # TODO: port to slack_sdk
         # msg.extras['url'] = f'https://{self.slack_web.server.domain}.slack.com/archives/' \
@@ -727,7 +725,7 @@ class SlackBackend(ErrBot):
     def get_im_channel(self, id_):
         """Open a direct message channel to a user"""
         try:
-            response = self.slack_web.conversations_open(user=id_)
+            response = self.slack_web.conversations_open(users=id_)
             return response["channel"]["id"]
         except SlackAPIResponseError as e:
             if e.error == "cannot_dm_bot":

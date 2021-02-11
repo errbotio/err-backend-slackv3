@@ -5,8 +5,7 @@ import os
 from tempfile import mkdtemp
 from mock import MagicMock
 
-from errbot.backends._slack.person import *
-
+from _slack.person import *
 from errbot.backends.base import RoomDoesNotExistError
 
 

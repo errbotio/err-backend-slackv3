@@ -4,6 +4,7 @@ import logging
 
 BOT_DATA_DIR = "/tmp"
 BOT_EXTRA_PLUGIN_DIR = None
+BOT_EXTRA_BACKEND_DIR = f"{BOT_DATA_DIR}/backends/"
 AUTOINSTALL_DEPS = True
 BOT_LOG_FILE = "/tmp/err.log"
 BOT_LOG_LEVEL = logging.DEBUG

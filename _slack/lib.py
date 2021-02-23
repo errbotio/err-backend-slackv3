@@ -8,6 +8,7 @@ USER_IS_BOT_HELPTEXT = (
     "https://api.slack.com/web."
 )
 
+
 class SlackAPIResponseError(RuntimeError):
     """Slack API returned a non-OK response"""
 

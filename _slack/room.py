@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 
 from errbot.backends.base import (
     Room,
@@ -42,24 +42,27 @@ class SlackRoom(Room):
         """
         The channel object exposed by SlackClient
         """
-        _id = None
-        # Cursors
-        cursor = ""
-        while cursor is not None:
-            conversations_list = self.slack_web.conversations_list(cursor=cursor)
+        log.warning("Resolving channel '%s' by iterating all channels", self.name)
+        channel_id = None
+        try:
             cursor = None
-            for channel in conversations_list["channels"]:
-                if channel["name"] == self.name:
-                    _id = channel["id"]
-                    break
-            else:
-                if conversations_list["response_metadata"]["next_cursor"] is not None:
-                    cursor = conversations_list["response_metadata"]["next_cursor"]
-                else:
-                    raise RoomDoesNotExistError(
-                        f"{str(self)} does not exist (or is a private group you don't have access to)"
-                    )
-        return _id
+            while True:
+                conversations_list = self.slack_web.conversations_list(
+                    cursor=cursor, limit=1000
+                )
+                for channel in conversations_list["channels"]:
+                    if channel["name"] == self.name:
+                        channel_id = channel["id"]
+                        raise StopIteration
+                cursor = conversations_list["response_metadata"].get(
+                    "next_cursor", None
+                )
+                if not cursor:
+                    raise RoomDoesNotExistError(f"Cannot find channel {self.name}.")
+        except StopIteration:
+            pass
+        log.warning("Channel '%s' resolved to channel id '%s'", self.name, channel_id)
+        return channel_id
 
     @property
     def _channel_info(self):

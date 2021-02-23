@@ -10,12 +10,16 @@ log = logging.getLogger(__name__)
 class SlackPerson(Person):
     """
     This class describes a person on Slack's network.
+    Reference:
+        https://api.slack.com/changelog/2016-08-11-user-id-format-changes
+        https://api.slack.com/docs/conversations-api
     """
+
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
-        if userid is not None and userid[0] not in ("U", "B", "W"):
+        if userid is not None and userid[0] not in ("U", "W"):
             raise Exception(
                 f"This is not a Slack user or bot id: {userid} "
-                "(should start with U, B or W)"
+                "(should start with U or W)"
             )
 
         if channelid is not None and channelid[0] not in ("D", "C", "G"):
@@ -59,7 +63,7 @@ class SlackPerson(Person):
     @property
     def fullname(self):
         """Convert a Slack user ID to their full name"""
-        return self._user_info.get("profile", {}).get("real_name", "")
+        return self._user_info.get("real_name", "")
 
     @property
     def email(self):
@@ -76,7 +80,9 @@ class SlackPerson(Person):
         res = self._webclient.users_info(user=self._userid)
 
         if res["ok"] is False:
-            log.error(f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}")
+            log.error(
+                f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
+            )
             self._user_info = {}
         else:
             self._user_info = res["user"]
@@ -96,13 +102,13 @@ class SlackPerson(Person):
 
         res = self._webclient.conversations_info(channel=self.channelid)
 
-        if res['ok'] is False:
+        if res["ok"] is False:
             raise RoomDoesNotExistError(
                 f"No channel with ID {self._channelid} exists.  Slack error {res['error']}"
             )
-        channel = res['channel']
+        channel = res["channel"]
 
-        if channel['is_im']:
+        if channel["is_im"]:
             self._channelname = channel["user"]
         else:
             self._channelname = channel["name"]

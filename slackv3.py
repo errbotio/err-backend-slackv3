@@ -51,22 +51,16 @@ except ImportError:
 
 from _slack.markdown import slack_markdown_converter
 from _slack.person import SlackPerson
-
+from _slack.lib import (
+    SlackAPIResponseError,
+    USER_IS_BOT_HELPTEXT
+)
+from _slack.room import SlackRoom
 
 # The Slack client automatically turns a channel name into a clickable
 # link if you prefix it with a #. Other clients receive this link as a
 # token matching this regex.
 SLACK_CLIENT_CHANNEL_HYPERLINK = re.compile(r"^<#(?P<id>([CG])[0-9A-Z]+)>$")
-
-USER_IS_BOT_HELPTEXT = (
-    "Connected to Slack using a bot account, which cannot manage "
-    "channels itself (you must invite the bot to channels instead, "
-    "it will auto-accept) nor invite people.\n\n"
-    "If you need this functionality, you will have to create a "
-    "regular user account and connect Errbot using that account. "
-    "For this, you will also need to generate a user token at "
-    "https://api.slack.com/web."
-)
 
 COLORS = {
     "red": "#FF0000",
@@ -76,18 +70,6 @@ COLORS = {
     "white": "#FFFFFF",
     "cyan": "#00FFFF",
 }  # Slack doesn't know its colors
-
-
-class SlackAPIResponseError(RuntimeError):
-    """Slack API returned a non-OK response"""
-
-    def __init__(self, *args, error="", **kwargs):
-        """
-        :param error:
-            The 'error' key from the API response data
-        """
-        self.error = error
-        super().__init__(*args, **kwargs)
 
 
 class SlackRoomOccupant(RoomOccupant, SlackPerson):
@@ -644,31 +626,31 @@ class SlackBackend(ErrBot):
 
     def userid_to_username(self, id_: str):
         """Convert a Slack user ID to their user name"""
-        user = self.slack_web.users_info(user=id_)["user"]
-        if user is None:
-            raise UserDoesNotExistError(f"Cannot find user with ID {id_}.")
-        return user["name"]
+        user = SlackPerson(self.slack_web , userid=id_)
+        return user.username
 
     def username_to_userid(self, name: str):
         """Convert a Slack user name to their user ID"""
-        name = name.lstrip("@")
-        if name == self.auth["user"]:
+        user_name = name.lstrip("@")
+        if user_name == self.auth["user"]:
             return self.bot_identifier.userid
-        user = [
-            user
-            for user in self.slack_web.users_list()["members"]
-            if user["name"] == name
-        ]
-        if user == []:
-            raise UserDoesNotExistError(f"Cannot find user {name}.")
-        if len(user) > 1:
-            log.error(
-                "Failed to uniquely identify '{}'.  Errbot found the following users: {}".format(
-                    name, " ".join(["{}={}".format(u["name"], u["id"]) for u in user])
-                )
-            )
-            raise UserNotUniqueError(f"Failed to uniquely identify {name}.")
-        return user[0]["id"]
+        log.warning("Resolving user name '%s' by iterating all users", user_name)
+        user_id = None
+        try:
+            cursor = None
+            while True:
+                users_list = self.slack_web.users_list(cursor=cursor, limit=1000)
+                for user in users_list["members"]:
+                    if user["name"] == user_name:
+                        user_id = user["id"]
+                        raise StopIteration
+                cursor = users_list["response_metadata"].get("next_cursor", None)
+                if not cursor:
+                    raise UserDoesNotExistError(f"Cannot find user {user_name}.")
+        except StopIteration:
+            pass
+        log.warning("User '%s' resolved to user id '%s'", user_name, user_id)
+        return user_id
 
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
@@ -754,9 +736,7 @@ class SlackBackend(ErrBot):
                 log.debug(
                     "This is a divert to private message, sending it directly to the user."
                 )
-                to_channel_id = self.get_im_channel(
-                    self.username_to_userid(msg.to.username)
-                )
+                to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
 
     def send_message(self, msg):
@@ -790,9 +770,7 @@ class SlackBackend(ErrBot):
                     log.debug(
                         "This is a divert to private message, sending it directly to the user."
                     )
-                    to_channel_id = self.get_im_channel(
-                        self.username_to_userid(msg.to.username)
-                    )
+                    to_channel_id = self.get_im_channel(msg.to.userid)
                 else:
                     to_channel_id = msg.to.channelid
 
@@ -1262,24 +1240,23 @@ class SlackRoom(Room):
         """
         The channel object exposed by SlackClient
         """
-        _id = None
-        # Cursors
-        cursor = ""
-        while cursor is not None:
-            conversations_list = self.slack_web.conversations_list(cursor=cursor)
+        log.warning("Resolving channel '%s' by iterating all channels", self.name)
+        channel_id = None
+        try:
             cursor = None
-            for channel in conversations_list["channels"]:
-                if channel["name"] == self.name:
-                    _id = channel["id"]
-                    break
-            else:
-                if conversations_list["response_metadata"]["next_cursor"] is not None:
-                    cursor = conversations_list["response_metadata"]["next_cursor"]
-                else:
-                    raise RoomDoesNotExistError(
-                        f"{str(self)} does not exist (or is a private group you don't have access to)"
-                    )
-        return _id
+            while True:
+                conversations_list = self.slack_web.conversations_list(cursor=cursor, limit=1000)
+                for channel in conversations_list["channels"]:
+                    if channel["name"] == self.name:
+                        channel_id = channel["id"]
+                        raise StopIteration
+                cursor = conversations_list["response_metadata"].get("next_cursor", None)
+                if not cursor:
+                    raise RoomDoesNotExistError(f"Cannot find channel {self.name}.")
+        except StopIteration:
+            pass
+        log.warning("Channel '%s' resolved to channel id '%s'", self.name, channel_id)
+        return channel_id
 
     @property
     def _channel_info(self):

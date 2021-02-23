@@ -5,7 +5,8 @@ import os
 from tempfile import mkdtemp
 from mock import MagicMock
 
-from _slack.person import *
+from errbot.backends._slack.person import *
+
 from errbot.backends.base import RoomDoesNotExistError
 
 
@@ -105,7 +106,7 @@ class SlackPersonTests(unittest.TestCase):
 
     def test_aclattr(self):
         self.p._username = "aclusername"
-        self.assertEqual(self.p.aclattr, "aclusername")
+        self.assertEqual(self.p.aclattr, "@aclusername")
 
     def test_person(self):
         self.p._username = "personusername"

@@ -10,6 +10,16 @@ from errbot.backends.base import (
 
 from _slack.lib import USER_IS_BOT_HELPTEXT
 
+try:
+    from slack_sdk.errors import SlackApiError
+except ImportError:
+    log.exception("Could not start the SlackSDK backend")
+    log.fatal(
+        "You need to install python modules in order to use the Slack backend.\n"
+        "You can do `pip install errbot[slack-sdk]` to install them."
+    )
+    sys.exit(1)
+
 log = logging.getLogger(__name__)
 
 
@@ -42,26 +52,25 @@ class SlackRoom(Room):
         """
         The channel object exposed by SlackClient
         """
-        log.warning("Resolving channel '%s' by iterating all channels", self.name)
+        log.debug("Resolving channel '{self.name}' by iterating all channels")
         channel_id = None
-        try:
-            cursor = None
-            while True:
-                conversations_list = self.slack_web.conversations_list(
-                    cursor=cursor, limit=1000
-                )
-                for channel in conversations_list["channels"]:
+        cursor = None
+        while channel_id is None and cursor != "":
+            res = self.slack_web.conversations_list(cursor=cursor, limit=1000)
+
+            if res["ok"] is True:
+                for channel in res["channels"]:
                     if channel["name"] == self.name:
                         channel_id = channel["id"]
-                        raise StopIteration
-                cursor = conversations_list["response_metadata"].get(
-                    "next_cursor", None
-                )
-                if not cursor:
-                    raise RoomDoesNotExistError(f"Cannot find channel {self.name}.")
-        except StopIteration:
-            pass
-        log.warning("Channel '%s' resolved to channel id '%s'", self.name, channel_id)
+                        break
+                else:
+                    cursor = res["response_metadata"].get("next_cursor", "")
+            else:
+                log.exception(f"Unable to list channels.  Slack error {res['error']}")
+
+        if channelid is None:
+            raise RoomDoesNotExistError(f"Cannot find channel {self.name}.")
+        log.debug(f"Channel '{self.name}' resolved to channel id '{channel_id}'")
         return channel_id
 
     @property

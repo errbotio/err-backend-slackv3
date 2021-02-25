@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 class SlackPersonTests(unittest.TestCase):
 
-    USER_INFO_OK = json.loads("""
+    USER_INFO_OK = json.loads(
+        """
         {
             "ok": true,
             "user": {
@@ -58,89 +59,177 @@ class SlackPersonTests(unittest.TestCase):
                 "has_2fa": false
             }
         }
-    """)
+    """
+    )
 
-    USER_INFO_FAIL = json.loads("""
+    USER_INFO_FAIL = json.loads(
+        """
         {
             "ok": false,
             "error": "user_not_found"
         }
-    """)
+    """
+    )
+
+    CHANNEL_INFO_PUBLIC_OK = json.loads(
+        """
+    {
+        "ok": true,
+        "channel": {
+            "id": "C012AB3CD",
+            "name": "general",
+            "is_channel": true,
+            "is_group": false,
+            "is_im": false,
+            "created": 1449252889,
+            "creator": "W012A3BCD",
+            "is_archived": false,
+            "is_general": true,
+            "unlinked": 0,
+            "name_normalized": "general",
+            "is_read_only": false,
+            "is_shared": false,
+            "parent_conversation": null,
+            "is_ext_shared": false,
+            "is_org_shared": false,
+            "pending_shared": [],
+            "is_pending_ext_shared": false,
+            "is_member": true,
+            "is_private": false,
+            "is_mpim": false,
+            "last_read": "1502126650.228446",
+            "topic": {
+                "value": "For public discussion of generalities",
+                "creator": "W012A3BCD",
+                "last_set": 1449709364
+            },
+            "purpose": {
+                "value": "This part of the workspace is for fun. Make fun here.",
+                "creator": "W012A3BCD",
+                "last_set": 1449709364
+            },
+            "previous_names": [
+                "specifics",
+                "abstractions",
+                "etc"
+            ],
+            "locale": "en-US"
+        }
+    }
+    """
+    )
+
+    CHANNEL_INFO_DIRECT_1TO1_OK = json.loads(
+        """
+    {
+        "ok": true,
+        "channel": {
+            "id": "C012AB3CD",
+            "created": 1507235627,
+            "is_im": true,
+            "is_org_shared": false,
+            "user": "U27FFLNF4",
+            "last_read": "1513718191.000038",
+            "latest": {
+                "type": "message",
+                "user": "U5R3PALPN",
+                "text": "Psssst!",
+                "ts": "1513718191.000038"
+            },
+            "unread_count": 0,
+            "unread_count_display": 0,
+            "is_open": true,
+            "locale": "en-US",
+            "priority": 0.043016851216706
+        }
+    }
+    """
+    )
+
+    CHANNEL_INFO_FAIL = json.loads(
+        """
+    {
+        "ok": false,
+        "error": "channel_not_found"
+    }
+    """
+    )
 
     def setUp(self):
-        self.webClient = MagicMock()
-        self.webClient.users_info.return_value = SlackPersonTests.USER_INFO_OK
+        self.webclient = MagicMock()
+        self.webclient.users_info.return_value = SlackPersonTests.USER_INFO_OK
+        self.webclient.conversations_info.return_value = (
+            SlackPersonTests.CHANNEL_INFO_PUBLIC_OK
+        )
         self.userid = "W012A3CDE"
-        self.channelid = "Ctest_channel_id"
+        self.channelid = "C012AB3CD"
         self.p = SlackPerson(
-            self.webClient, userid=self.userid, channelid=self.channelid
+            self.webclient, userid=self.userid, channelid=self.channelid
         )
 
     def test_wrong_userid(self):
         with self.assertRaises(Exception):
-            SlackPerson(self.webClient, userid="invalid")
+            SlackPerson(self.webclient, userid="invalid")
 
     def test_wrong_channelid(self):
         with self.assertRaises(Exception):
-            SlackPerson(self.webClient, channelid="invalid")
+            SlackPerson(self.webclient, channelid="invalid")
 
     def test_username(self):
         self.assertEqual(self.p.userid, self.userid)
         self.assertEqual(self.p.username, "spengler")
         self.assertEqual(self.p.username, "spengler")
-        self.webClient.users_info.assert_called_once_with(user=self.userid)
+        self.webclient.users_info.assert_called_once_with(user=self.userid)
 
     def test_username_not_found(self):
-        self.webClient.users_info.return_value = {"user": None}
+        self.webclient.users_info.return_value = {"user": None}
         self.assertEqual(self.p.username, "")
         self.assertEqual(self.p.username, "")
-        self.webClient.users_info.assert_called_with(user=self.userid)
-        self.assertEqual(self.webClient.users_info.call_count, 2)
+        self.webclient.users_info.assert_called_with(user=self.userid)
+        self.assertEqual(self.webclient.users_info.call_count, 2)
 
     def test_fullname(self):
         self.assertEqual(self.p.fullname, "Egon Spengler")
         self.assertEqual(self.p.fullname, "Egon Spengler")
-        self.webClient.users_info.assert_called_once_with(user=self.userid)
+        self.webclient.users_info.assert_called_once_with(user=self.userid)
 
     def test_fullname_not_found(self):
-        self.webClient.users_info.return_value = {"user": None}
+        self.webclient.users_info.return_value = {"user": None}
         self.assertEqual(self.p.fullname, "")
         self.assertEqual(self.p.fullname, "")
-        self.webClient.users_info.assert_called_with(user=self.userid)
-        self.assertEqual(self.webClient.users_info.call_count, 2)
+        self.webclient.users_info.assert_called_with(user=self.userid)
+        self.assertEqual(self.webclient.users_info.call_count, 2)
 
     def test_email(self):
         self.assertEqual(self.p.email, "spengler@ghostbusters.example.com")
         self.assertEqual(self.p.email, "spengler@ghostbusters.example.com")
-        self.webClient.users_info.assert_called_once_with(user=self.userid)
+        self.webclient.users_info.assert_called_once_with(user=self.userid)
 
     def test_email_not_found(self):
-        self.webClient.users_info.return_value = {"user": None}
+        self.webclient.users_info.return_value = {"user": None}
         self.assertEqual(self.p.email, "")
         self.assertEqual(self.p.email, "")
-        self.webClient.users_info.assert_called_with(user=self.userid)
-        self.assertEqual(self.webClient.users_info.call_count, 2)
+        self.webclient.users_info.assert_called_with(user=self.userid)
+        self.assertEqual(self.webclient.users_info.call_count, 2)
 
     def test_channelname(self):
         self.assertEqual(self.p.channelid, self.channelid)
-        self.webClient.conversations_list.return_value = {
-            "channels": [{"id": self.channelid, "name": "test_channel"}]
-        }
-        self.assertEqual(self.p.channelname, "test_channel")
-        self.assertEqual(self.p.channelname, "test_channel")
-        self.webClient.conversations_list.assert_called_once_with()
+        self.assertEqual(self.p.channelname, "general")
+        self.assertEqual(self.p.channelname, "general")
+        self.webclient.conversations_info.assert_called_once_with()
         self.p._channelid = None
         self.assertIsNone(self.p.channelname)
 
     def test_channelname_channel_not_found(self):
-        self.webClient.conversations_list.return_value = {
-            "channels": [{"id": "random", "name": "random_channel"}]
-        }
+        self.webclient.conversations_list.return_value = (
+            SlackPersonTests.CHANNEL_INFO_FAIL
+        )
         with self.assertRaises(RoomDoesNotExistError) as e:
             self.p.channelname
 
     def test_channelname_channel_empty_channel_list(self):
-        self.webClient.conversations_list.return_value = {"channels": []}
+        self.webclient.conversations_list.return_value = SlackPersonTests.CHANNEL_INFO_FAIL
+        self.p._channel_info = {}
         with self.assertRaises(RoomDoesNotExistError) as e:
             self.p.channelname
 
@@ -149,19 +238,17 @@ class SlackPersonTests(unittest.TestCase):
             self.p.domain
 
     def test_aclattr(self):
-        self.p._username = "aclusername"
-        self.assertEqual(self.p.aclattr, "@aclusername")
+        self.assertEqual(self.p.aclattr, "W012A3CDE")
 
     def test_person(self):
-        self.p._username = "personusername"
-        self.assertEqual(self.p.person, "@personusername")
+        self.assertEqual(self.p.person, "W012A3CDE")
 
     def test_to_string(self):
-        self.assertEqual(str(self.p), "@test_username")
+        self.assertEqual(str(self.p), "<@W012A3CDE>")
 
     def test_equal(self):
         self.another_p = SlackPerson(
-            self.webClient, userid=self.userid, channelid=self.channelid
+            self.webclient, userid=self.userid, channelid=self.channelid
         )
         self.assertTrue(self.p == self.another_p)
         self.assertFalse(self.p == "this is not a person")

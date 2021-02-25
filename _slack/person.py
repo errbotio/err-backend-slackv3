@@ -31,34 +31,27 @@ class SlackPerson(Person):
         self._userid = userid
         self._user_info = {}
         self._channelid = channelid
-        self._channelname = None
+        self._channel_info = {}
         self._webclient = webclient
 
         if self._userid is not None:
             self._cache_user_info()
+        if self._channelid is not None:
+            self._cache_channel_info()
 
     @property
     def userid(self):
+        """
+        Slack ID is the only secure way to uniquely identify a user.
+        """
         return self._userid
-
-    @property
-    def info(self):
-        """
-        Return the user info, but load it if we didn't do it yet.
-
-        :rtype: dict[str, any]
-        :return: the user info
-        """
-        if not self._info:
-            self._info = self._get_user_info()
-        return self._info
 
     @property
     def username(self):
         """
         Convert a Slack user ID to their display name.
         """
-        return self._user_info.get("profile", {}).get("display_name", "")
+        return self._user_info.get("display_name", "")
 
     @property
     def fullname(self):
@@ -68,7 +61,7 @@ class SlackPerson(Person):
     @property
     def email(self):
         """Convert a Slack user ID to their user email"""
-        return self._user_info.get("profile", {}).get("email", "")
+        return self._user_info.get("email", "")
 
     def _cache_user_info(self):
         """
@@ -77,15 +70,18 @@ class SlackPerson(Person):
         :rtype: dict[str, any]
         :return: the user info
         """
+        if self._userid is None:
+            raise ValueError("Unable to look up an undeined user id.")
+
         res = self._webclient.users_info(user=self._userid)
 
         if res["ok"] is False:
             log.error(
                 f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
             )
-            self._user_info = {}
         else:
-            self._user_info = res["user"]
+            for attribute in ["real_name", "display_name", "email"]:
+                self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
 
     @property
     def channelid(self):
@@ -94,25 +90,31 @@ class SlackPerson(Person):
     @property
     def channelname(self):
         """Convert a Slack channel ID to its channel name"""
-        if self.channelid is None:
-            return None
-
-        if self._channelname:
-            return self._channelname
-
-        res = self._webclient.conversations_info(channel=self.channelid)
-
-        if res["ok"] is False:
-            raise RoomDoesNotExistError(
-                f"No channel with ID {self._channelid} exists.  Slack error {res['error']}"
-            )
-        channel = res["channel"]
-
-        if channel["is_im"]:
-            self._channelname = channel["user"]
+        if self._channel_info["is_im"] is True:
+            return self._channel_info["user"]
         else:
-            self._channelname = channel["name"]
-        return self._channelname
+            return self._channel_info["name"]
+
+    def _cache_channel_info(self):
+        """
+        Retrieve channel info from Slack
+        """
+        if self.channelid is None:
+            raise ValueError("Unable to lookup and undefined channel id.")
+
+        if self._channel_info.get("id") is None:
+            res = self._webclient.conversations_info(channel=self.channelid)
+            if res["ok"] is False:
+                raise RoomDoesNotExistError(
+                    f"No channel with ID {self._channelid} exists.  Slack error {res['error']}"
+                )
+            if res["channel"]["id"] != self._channelid:
+                raise ValueError(
+                    "Inconsistent data detected.  "
+                    f"{res['channel']['id']} does not equal {self._channelid}"
+                )
+            for attribute in ["name", "user", "is_im", "is_mpim", "id"]:
+                self._channel_info[attribute] = res["channel"].get(attribute)
 
     @property
     def domain(self):
@@ -133,7 +135,7 @@ class SlackPerson(Person):
     person = aclattr
 
     def __unicode__(self):
-        return f"@<{self._userid}>"
+        return f"<@{self._userid}>"
 
     def __str__(self):
         return self.__unicode__()

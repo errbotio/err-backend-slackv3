@@ -429,7 +429,7 @@ class SlackBackend(ErrBot):
             event_handler = getattr(self, f"_handle_{event_type}")
             return event_handler(self.slack_web, event)
         except AttributeError:
-            log.warning(f"Event type {event_type} not supported.")
+            log.debug(f"Event type {event_type} not supported.")
 
     def _sm_generic_event_handler(
         self, client: SocketModeClient, req: SocketModeRequest
@@ -645,7 +645,7 @@ class SlackBackend(ErrBot):
             res = self.slack_web.users_list(cursor=cursor, limit=1000)
             if res["ok"] is False:
                 log.exception(f"Unable to list users.  Slack error: {res['error']}")
-            for user in users_list["members"]:
+            for user in res["members"]:
                 if user["name"] == username:
                     user_ids.append(user["id"])
             else:
@@ -654,7 +654,7 @@ class SlackBackend(ErrBot):
             raise UserDoesNotExistError(f"Cannot find user {username}.")
         if len(user_ids) > 1:
             raise UserNotUniqueError(f"Cannot uniquely identify {username}")
-        return user_ids[0]["name"]
+        return user_ids[0]
 
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""

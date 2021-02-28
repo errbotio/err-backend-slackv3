@@ -2,9 +2,9 @@ import copyreg
 import json
 import logging
 import pprint
-import threading
 import re
 import sys
+import threading
 from functools import lru_cache
 from typing import BinaryIO
 
@@ -35,10 +35,10 @@ log = logging.getLogger(__name__)
 try:
     from slack_sdk.errors import BotUserAccessError, SlackApiError
     from slack_sdk.rtm.v2 import RTMClient
-    from slack_sdk.web import WebClient
     from slack_sdk.socket_mode import SocketModeClient
-    from slack_sdk.socket_mode.response import SocketModeResponse
     from slack_sdk.socket_mode.request import SocketModeRequest
+    from slack_sdk.socket_mode.response import SocketModeResponse
+    from slack_sdk.web import WebClient
     from slackeventsapi import SlackEventAdapter
 except ImportError:
     log.exception("Could not start the SlackSDK backend")
@@ -48,6 +48,7 @@ except ImportError:
     )
     sys.exit(1)
 
+from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
 from _slack.markdown import slack_markdown_converter
 from _slack.person import SlackPerson
 from _slack.lib import SlackAPIResponseError, USER_IS_BOT_HELPTEXT
@@ -66,94 +67,6 @@ COLORS = {
     "white": "#FFFFFF",
     "cyan": "#00FFFF",
 }  # Slack doesn't know its colors
-
-
-class SlackRoomOccupant(RoomOccupant, SlackPerson):
-    """
-    This class represents a person inside a MUC.
-    """
-
-    def __init__(self, webclient: WebClient, userid, channelid, bot):
-        super().__init__(webclient, userid, channelid)
-        self._room = SlackRoom(webclient=webclient, channelid=channelid, bot=bot)
-
-    @property
-    def room(self):
-        return self._room
-
-    def __unicode__(self):
-        return f"#{self._room.name}/{self.username}"
-
-    def __str__(self):
-        return self.__unicode__()
-
-    def __eq__(self, other):
-        if not isinstance(other, SlackRoomOccupant):
-            log.warning(
-                "tried to compare a SlackRoomOccupant with a SlackPerson %s vs %s",
-                self,
-                other,
-            )
-            return False
-        return other.room.id == self.room.id and other.userid == self.userid
-
-
-class SlackBot(SlackPerson):
-    """
-    This class describes a bot on Slack's network.
-    """
-
-    def __init__(self, webclient: WebClient, bot_id, bot_username):
-        self._bot_id = bot_id
-        self._bot_username = bot_username
-        super().__init__(webclient, userid=bot_id)
-
-    @property
-    def username(self):
-        return self._bot_username
-
-    # Beware of gotcha. Without this, nick would point to username of SlackPerson.
-    nick = username
-
-    @property
-    def aclattr(self):
-        # Make ACLs match against integration ID rather than human-readable
-        # nicknames to avoid webhooks impersonating other people.
-        return f"<{self._bot_id}>"
-
-    @property
-    def fullname(self):
-        return None
-
-
-class SlackRoomBot(RoomOccupant, SlackBot):
-    """
-    This class represents a bot inside a MUC.
-    """
-
-    def __init__(self, sc, bot_id, bot_username, channelid, bot):
-        super().__init__(sc, bot_id, bot_username)
-        self._room = SlackRoom(webclient=sc, channelid=channelid, bot=bot)
-
-    @property
-    def room(self):
-        return self._room
-
-    def __unicode__(self):
-        return f"#{self._room.name}/{self.username}"
-
-    def __str__(self):
-        return self.__unicode__()
-
-    def __eq__(self, other):
-        if not isinstance(other, SlackRoomOccupant):
-            log.warning(
-                "tried to compare a SlackRoomBotOccupant with a SlackPerson %s vs %s",
-                self,
-                other,
-            )
-            return False
-        return other.room.id == self.room.id and other.userid == self.userid
 
 
 class SlackBackend(ErrBot):
@@ -658,22 +571,15 @@ class SlackBackend(ErrBot):
 
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
-        channel = self.slack_web.conversations_info(channel=id_)["channel"]
-        if channel is None:
-            raise RoomDoesNotExistError(f"No channel with ID {id_} exists.")
-        return channel["name"]
+        log.warning(f"get channel name from {id_}")
+        room = SlackRoom(self._webclient, channelid=id_, bot=self)
+        return room.channelname
 
     def channelname_to_channelid(self, name: str):
         """Convert a Slack channel name to its channel ID"""
-        name = name.lstrip("#")
-        channel = [
-            channel
-            for channel in self.slack_web.conversations_list()["channels"]
-            if channel["name"] == name
-        ]
-        if not channel:
-            raise RoomDoesNotExistError(f"No channel named {name} exists")
-        return channel[0]["id"]
+        log.warning(f"get channel id from {name}")
+        room = SlackRoom(self._webclient, name=name, bot=self)
+        return room.id
 
     def channels(
         self,
@@ -1105,7 +1011,7 @@ class SlackBackend(ErrBot):
 
             ts = self._ts_for_message(msg)
 
-            self.api_call(
+            self.slackweb.api_call(
                 method,
                 data={"channel": to_channel_id, "timestamp": ts, "name": reaction},
             )

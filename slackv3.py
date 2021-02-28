@@ -51,8 +51,7 @@ except ImportError:
 from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
 from _slack.markdown import slack_markdown_converter
 from _slack.person import SlackPerson
-from _slack.lib import SlackAPIResponseError, USER_IS_BOT_HELPTEXT
-from _slack.room import SlackRoom
+from _slack.room import SlackRoom, SlackRoomBot, SlackRoomOccupant
 
 # The Slack client automatically turns a channel name into a clickable
 # link if you prefix it with a #. Other clients receive this link as a

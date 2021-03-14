@@ -571,13 +571,13 @@ class SlackBackend(ErrBot):
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
         log.warning(f"get channel name from {id_}")
-        room = SlackRoom(self._webclient, channelid=id_, bot=self)
+        room = SlackRoom(self.slack_web, channelid=id_, bot=self)
         return room.channelname
 
     def channelname_to_channelid(self, name: str):
         """Convert a Slack channel name to its channel ID"""
         log.warning(f"get channel id from {name}")
-        room = SlackRoom(self._webclient, name=name, bot=self)
+        room = SlackRoom(self.slack_web, name=name, bot=self)
         return room.id
 
     def channels(

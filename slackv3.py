@@ -28,7 +28,6 @@ try:
     from slack_sdk.socket_mode.response import SocketModeResponse
     from slack_sdk.web import WebClient
     from slackeventsapi import SlackEventAdapter
-
 except ImportError:
     log.exception("Could not start the SlackSDK backend")
     log.fatal(
@@ -330,7 +329,7 @@ class SlackBackend(ErrBot):
             event_handler = getattr(self, f"_handle_{event_type}")
             return event_handler(self.slack_web, event)
         except AttributeError:
-            log.warning(f"Event type {event_type} not supported.")
+            log.debug(f"Event type {event_type} not supported.")
 
     def _sm_generic_event_handler(
         self, client: SocketModeClient, req: SocketModeRequest
@@ -524,7 +523,6 @@ class SlackBackend(ErrBot):
     def userid_to_username(self, id_: str):
         """Convert a Slack user ID to their user name"""
         user = SlackPerson(self.slack_web, userid=id_)
-
         return user.username
 
     def username_to_userid(self, name: str):
@@ -547,7 +545,7 @@ class SlackBackend(ErrBot):
             res = self.slack_web.users_list(cursor=cursor, limit=1000)
             if res["ok"] is False:
                 log.exception(f"Unable to list users.  Slack error: {res['error']}")
-            for user in users_list["members"]:
+            for user in res["members"]:
                 if user["name"] == username:
                     user_ids.append(user["id"])
             else:
@@ -556,26 +554,19 @@ class SlackBackend(ErrBot):
             raise UserDoesNotExistError(f"Cannot find user {username}.")
         if len(user_ids) > 1:
             raise UserNotUniqueError(f"Cannot uniquely identify {username}")
-        return user_ids[0]["name"]
+        return user_ids[0]
 
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
-        channel = self.slack_web.conversations_info(channel=id_)["channel"]
-        if channel is None:
-            raise RoomDoesNotExistError(f"No channel with ID {id_} exists.")
-        return channel["name"]
+        log.warning(f"get channel name from {id_}")
+        room = SlackRoom(self.slack_web, channelid=id_, bot=self)
+        return room.channelname
 
     def channelname_to_channelid(self, name: str):
         """Convert a Slack channel name to its channel ID"""
-        name = name.lstrip("#")
-        channel = [
-            channel
-            for channel in self.slack_web.conversations_list()["channels"]
-            if channel["name"] == name
-        ]
-        if not channel:
-            raise RoomDoesNotExistError(f"No channel named {name} exists")
-        return channel[0]["id"]
+        log.warning(f"get channel id from {name}")
+        room = SlackRoom(self.slack_web, name=name, bot=self)
+        return room.id
 
     def channels(
         self,
@@ -642,9 +633,7 @@ class SlackBackend(ErrBot):
                 log.debug(
                     "This is a divert to private message, sending it directly to the user."
                 )
-                to_channel_id = self.get_im_channel(
-                    self.username_to_userid(msg.to.username)
-                )
+                to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
 
     def send_message(self, msg):
@@ -678,9 +667,7 @@ class SlackBackend(ErrBot):
                     log.debug(
                         "This is a divert to private message, sending it directly to the user."
                     )
-                    to_channel_id = self.get_im_channel(
-                        self.username_to_userid(msg.to.username)
-                    )
+                    to_channel_id = self.get_im_channel(msg.to.userid)
                 else:
                     to_channel_id = msg.to.channelid
 
@@ -1011,7 +998,7 @@ class SlackBackend(ErrBot):
 
             ts = self._ts_for_message(msg)
 
-            self.api_call(
+            self.slackweb.api_call(
                 method,
                 data={"channel": to_channel_id, "timestamp": ts, "name": reaction},
             )

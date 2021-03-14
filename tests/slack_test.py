@@ -11,7 +11,7 @@ from errbot.bootstrap import bot_config_defaults
 log = logging.getLogger(__name__)
 
 try:
-    from errbot.backends import slack
+    import slackv3 as slack
 
     class TestSlackBackend(slack.SlackBackend):
         def __init__(self, *args, **kwargs):

@@ -23,6 +23,16 @@ except ImportError:
     )
     sys.exit(1)
 
+try:
+    from slack_sdk.errors import SlackApiError
+except ImportError:
+    log.exception("Could not start the SlackSDK backend")
+    log.fatal(
+        "You need to install python modules in order to use the Slack backend.\n"
+        "You can do `pip install errbot[slack-sdk]` to install them."
+    )
+    sys.exit(1)
+
 log = logging.getLogger(__name__)
 
 

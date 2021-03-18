@@ -91,6 +91,37 @@ class SlackBackend(ErrBot):
         """
         super().set_message_size_limit(limit, hard_limit)
 
+    def api_call(self, method, data=None, raise_errors=True):
+        """
+        Make an API call to the Slack API and return response data.
+
+        This is a thin wrapper around `SlackClient.server.api_call`.
+
+        :param method:
+            The API method to invoke (see https://api.slack.com/methods/).
+        :param raise_errors:
+            Whether to raise :class:`~SlackAPIResponseError` if the API
+            returns an error
+        :param data:
+            A dictionary with data to pass along in the API request.
+        :returns:
+            A dictionary containing the (JSON-decoded) API response
+        :raises:
+            :class:`~SlackAPIResponseError` if raise_errors is True and the
+            API responds with `{"ok": false}`
+        """
+        if data is None:
+            data = {}
+
+        response = self.slack_web.api_call(method, **data)
+
+        if raise_errors and not response["ok"]:
+            raise SlackAPIResponseError(
+                f"Slack API call to {method} failed: {response['error']}",
+                error=response["error"],
+            )
+        return response
+
     @staticmethod
     def _unpickle_identifier(identifier_str):
         return SlackBackend.__build_identifier(identifier_str)

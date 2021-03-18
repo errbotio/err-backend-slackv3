@@ -9,8 +9,10 @@ from errbot.backends.base import (
     UserDoesNotExistError,
 )
 
-from _slack.lib import USER_IS_BOT_HELPTEXT
+from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
 from _slack.person import SlackPerson
+
+log = logging.getLogger(__name__)
 
 try:
     from slack_sdk.web import WebClient
@@ -22,18 +24,6 @@ except ImportError:
         "You can do `pip install errbot[slack-sdk]` to install them."
     )
     sys.exit(1)
-
-try:
-    from slack_sdk.errors import SlackApiError
-except ImportError:
-    log.exception("Could not start the SlackSDK backend")
-    log.fatal(
-        "You need to install python modules in order to use the Slack backend.\n"
-        "You can do `pip install errbot[slack-sdk]` to install them."
-    )
-    sys.exit(1)
-
-log = logging.getLogger(__name__)
 
 
 class SlackRoom(Room):
@@ -72,7 +62,6 @@ class SlackRoom(Room):
         channel_id = None
         cursor = None
         while channel_id is None and cursor != "":
-            log.debug(f"CURSOR={cursor}")
             res = self._webclient.conversations_list(
                 cursor=cursor,
                 limit=1000,

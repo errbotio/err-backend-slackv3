@@ -8,12 +8,24 @@ import threading
 from functools import lru_cache
 from typing import BinaryIO
 
-from errbot.backends.base import (AWAY, ONLINE, REACTION_ADDED,
-                                  REACTION_REMOVED, Card, Identifier, Message,
-                                  Presence, Reaction, Room,
-                                  RoomDoesNotExistError, RoomError,
-                                  RoomOccupant, Stream, UserDoesNotExistError,
-                                  UserNotUniqueError)
+from errbot.backends.base import (
+    AWAY,
+    ONLINE,
+    REACTION_ADDED,
+    REACTION_REMOVED,
+    Card,
+    Identifier,
+    Message,
+    Presence,
+    Reaction,
+    Room,
+    RoomDoesNotExistError,
+    RoomError,
+    RoomOccupant,
+    Stream,
+    UserDoesNotExistError,
+    UserNotUniqueError,
+)
 from errbot.core import ErrBot
 from errbot.core_plugins import flask_app
 from errbot.utils import split_string_after
@@ -266,7 +278,7 @@ class SlackBackend(ErrBot):
         log.debug(f"Auth response: {self.auth}")
         if not self.auth["ok"]:
             raise SlackAPIResponseError(
-                error=f"Couldn't authenticate with Slack. Server said: {self.auth['error']}"
+                error=f"Failed to authenticate with Slack.  Slack Error: {self.auth['error']}"
             )
         log.info("Token accepted")
         self.bot_identifier = SlackPerson(self.slack_web, self.auth["user_id"])

@@ -148,4 +148,3 @@ class SlackPerson(Person):
 
     def __hash__(self):
         return self.userid.__hash__()
-

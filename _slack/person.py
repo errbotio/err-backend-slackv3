@@ -15,7 +15,7 @@ class SlackPerson(Person):
     """
 
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
-        if userid is not None and userid[0] not in ("B", "U", "W"):
+        if userid is not None and userid[0] not in ("U", "W", "B"):
             raise Exception(
                 f"This is not a Slack user or bot id: {userid} "
                 "(should start with B, U or W)"
@@ -148,4 +148,3 @@ class SlackPerson(Person):
 
     def __hash__(self):
         return self.userid.__hash__()
-

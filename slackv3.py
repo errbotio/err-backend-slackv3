@@ -8,12 +8,24 @@ import threading
 from functools import lru_cache
 from typing import BinaryIO
 
-from errbot.backends.base import (AWAY, ONLINE, REACTION_ADDED,
-                                  REACTION_REMOVED, Card, Identifier, Message,
-                                  Presence, Reaction, Room,
-                                  RoomDoesNotExistError, RoomError,
-                                  RoomOccupant, Stream, UserDoesNotExistError,
-                                  UserNotUniqueError)
+from errbot.backends.base import (
+    AWAY,
+    ONLINE,
+    REACTION_ADDED,
+    REACTION_REMOVED,
+    Card,
+    Identifier,
+    Message,
+    Presence,
+    Reaction,
+    Room,
+    RoomDoesNotExistError,
+    RoomError,
+    RoomOccupant,
+    Stream,
+    UserDoesNotExistError,
+    UserNotUniqueError,
+)
 from errbot.core import ErrBot
 from errbot.core_plugins import flask_app
 from errbot.utils import split_string_after
@@ -90,6 +102,37 @@ class SlackBackend(ErrBot):
         Slack supports upto 40000 characters per message, Errbot maintains 4096 by default.
         """
         super().set_message_size_limit(limit, hard_limit)
+
+    def api_call(self, method, data=None, raise_errors=True):
+        """
+        Make an API call to the Slack API and return response data.
+
+        This is a thin wrapper around `SlackClient.server.api_call`.
+
+        :param method:
+            The API method to invoke (see https://api.slack.com/methods/).
+        :param raise_errors:
+            Whether to raise :class:`~SlackAPIResponseError` if the API
+            returns an error
+        :param data:
+            A dictionary with data to pass along in the API request.
+        :returns:
+            A dictionary containing the (JSON-decoded) API response
+        :raises:
+            :class:`~SlackAPIResponseError` if raise_errors is True and the
+            API responds with `{"ok": false}`
+        """
+        if data is None:
+            data = {}
+
+        response = self.slack_web.api_call(method, **data)
+
+        if raise_errors and not response["ok"]:
+            raise SlackAPIResponseError(
+                f"Slack API call to {method} failed: {response['error']}",
+                error=response["error"],
+            )
+        return response
 
     @staticmethod
     def _unpickle_identifier(identifier_str):
@@ -235,7 +278,7 @@ class SlackBackend(ErrBot):
         log.debug(f"Auth response: {self.auth}")
         if not self.auth["ok"]:
             raise SlackAPIResponseError(
-                error=f"Couldn't authenticate with Slack. Server said: {self.auth['error']}"
+                error=f"Failed to authenticate with Slack.  Slack Error: {self.auth['error']}"
             )
         log.info("Token accepted")
         self.bot_identifier = SlackPerson(self.slack_web, self.auth["user_id"])

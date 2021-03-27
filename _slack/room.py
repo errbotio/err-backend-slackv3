@@ -331,9 +331,9 @@ class SlackRoomBot(RoomOccupant, SlackBot):
     This class represents a bot inside a MUC.
     """
 
-    def __init__(self, sc, bot_id, bot_username, channelid, bot):
-        super().__init__(sc, bot_id, bot_username)
-        self._room = SlackRoom(webclient=sc, channelid=channelid, bot=bot)
+    def __init__(self, webclient, bot_id, bot_username, channelid, bot):
+        super().__init__(webclient, bot_id, bot_username)
+        self._room = SlackRoom(webclient=webclient, channelid=channelid, bot=bot)
 
     @property
     def room(self):

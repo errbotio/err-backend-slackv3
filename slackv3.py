@@ -904,13 +904,15 @@ class SlackBackend(ErrBot):
         """
         Parse a string for Slack user/channel IDs.
 
+        Reference: https://api.slack.com/changelog/2017-09-the-one-about-usernames
+
         Supports strings with the following formats::
 
             <#C12345>
             <#C12345|channel>
             <@U12345>
-            <@U12345|user>
-            @user
+            <@U12345|user>  ** deprecated for removal.
+            @user           ** deprecated for removal.
             #channel/user
             #channel
 
@@ -919,7 +921,7 @@ class SlackBackend(ErrBot):
         """
         exception_message = (
             "Unparseable slack identifier, should be of the format `<#C12345>`, `<@U12345>`, "
-            "`<@U12345|user>`, `@user`, `#channel/user` or `#channel`. (Got `%s`)"
+            "`#channel/user` or `#channel`. (Got `%s`)"
         )
         text = text.strip()
 
@@ -939,10 +941,10 @@ class SlackBackend(ErrBot):
             if text == "":
                 raise ValueError(exception_message % "")
             if text[0] in ("U", "B", "W"):
-                if "|" in text:
-                    userid, username = text.split("|")
-                else:
-                    userid = text
+                # ~ if "|" in text:
+                    # ~ userid, username = text.split("|")
+                # ~ else:
+                userid = text
             elif text[0] in ("C", "G", "D"):
                 if "|" in text:
                     channelid, channelname = text.split("|")
@@ -950,8 +952,8 @@ class SlackBackend(ErrBot):
                     channelid = text
             else:
                 raise ValueError(exception_message % text)
-        elif text[0] == "@":
-            username = text[1:]
+        # ~ elif text[0] == "@":
+            # ~ username = text[1:]
         elif text[0] == "#":
             plainrep = text[1:]
             if "/" in text:

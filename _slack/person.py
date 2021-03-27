@@ -12,6 +12,18 @@ class SlackPerson(Person):
     Reference:
         https://api.slack.com/changelog/2016-08-11-user-id-format-changes
         https://api.slack.com/docs/conversations-api
+
+        slack user:https://api.slack.com/methods/users.info
+        slack channel: https://api.slack.com/methods/conversations.info
+
+        Errbot Person composition
+        {
+            person: user.id,
+            nick: user.profile.display_name or profile.display_name_normalized
+            fullname: user.profile.real_name or profile.real_name_normalized
+            client: conversation.channel.id
+            email: user.profile.email (optional)
+        }
     """
 
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
@@ -129,7 +141,7 @@ class SlackPerson(Person):
     def aclattr(self):
         # Note: Don't use str(self) here because that will return
         # an incorrect format from SlackMUCOccupant.
-        # Only use user id as per https://api.slack.com/changelog/2017-09-the-one-about-usernames
+        # Only use user id as per slack's user-id-format-changes article.
         return f"{self._userid}"
 
     person = aclattr

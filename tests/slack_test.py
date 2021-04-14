@@ -20,14 +20,16 @@ try:
             self.test_msgs = []
             self.bot_identifier = MagicMock()
             self.bot_identifier.userid.return_value = "ULxxzzz00"
+            self.slack_web = MagicMock()
 
         def callback_message(self, msg):
             self.test_msgs.append(msg)
 
-        # ~ def find_user(self, user):
-            # ~ m = MagicMock()
-            # ~ m.name = user
-            # ~ return m
+        def find_user(self, user):
+            m = MagicMock()
+            m.name = user
+            m.channelid = "C123456"
+            return m
 
 
 except SystemExit:
@@ -35,7 +37,7 @@ except SystemExit:
 
 
 USER_INFO_OK = json.loads(
-"""
+    """
     {
         "ok": true,
         "user": {
@@ -81,7 +83,7 @@ USER_INFO_OK = json.loads(
 )
 
 CONVERSATION_INFO_PUBLIC_OK = json.loads(
-"""
+    """
     {
         "ok": true,
         "channel": {
@@ -129,7 +131,7 @@ CONVERSATION_INFO_PUBLIC_OK = json.loads(
 )
 
 CHANNEL_INFO_DIRECT_1TO1_OK = json.loads(
-"""
+    """
 {
     "ok": true,
     "channel": {
@@ -156,7 +158,7 @@ CHANNEL_INFO_DIRECT_1TO1_OK = json.loads(
 )
 
 CONVERSATION_OPEN_OK = json.loads(
-"""
+    """
 {
     "ok": true,
     "channel": {
@@ -165,6 +167,7 @@ CONVERSATION_OPEN_OK = json.loads(
 }
 """
 )
+
 
 class SlackTests(unittest.TestCase):
     def setUp(self):
@@ -265,10 +268,6 @@ class SlackTests(unittest.TestCase):
 
         self.assertEqual(extract_from("<@U12345>"), (None, "U12345", None, None))
 
-        self.assertEqual(
-            extract_from("<@U12345|UName>"), ("UName", "U12345", None, None)
-        )
-
         self.assertEqual(extract_from("<@B12345>"), (None, "B12345", None, None))
 
         self.assertEqual(extract_from("<#C12345>"), (None, None, None, "C12345"))
@@ -284,6 +283,9 @@ class SlackTests(unittest.TestCase):
         )
 
         self.assertEqual(extract_from("#general"), (None, None, "general", None))
+
+        with self.assertRaises(ValueError):
+            extract_from("<@U12345|UName>")
 
         with self.assertRaises(ValueError):
             extract_from("")
@@ -302,7 +304,9 @@ class SlackTests(unittest.TestCase):
 
     def test_build_identifier(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.conversations_info.return_value = CONVERSATION_INFO_PUBLIC_OK
+        self.slack.slack_web.conversations_info.return_value = (
+            CONVERSATION_INFO_PUBLIC_OK
+        )
         self.slack.slack_web.users_info.return_value = USER_INFO_OK
         self.slack.slack_web.conversations_open.return_value = CONVERSATION_OPEN_OK
         build_from = self.slack.build_identifier
@@ -385,9 +389,6 @@ class SlackTests(unittest.TestCase):
         )
 
     def test_mention_processing(self):
-        self.slack.webclient.server.users.find = MagicMock(
-            side_effect=self.slack.find_user
-        )
 
         mentions = self.slack.process_mentions
 

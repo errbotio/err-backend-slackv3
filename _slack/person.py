@@ -23,6 +23,7 @@ class SlackPerson(Person):
             fullname: user.profile.real_name or profile.real_name_normalized
             client: conversation.channel.id
             email: user.profile.email (optional)
+            domain: team.domain (used in archive url)
         }
     """
 
@@ -93,6 +94,13 @@ class SlackPerson(Person):
         else:
             for attribute in ["real_name", "display_name", "email"]:
                 self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+            team_res = self._webclient.team_info(team=res["user"]["team_id"])
+            if team_res["ok"] == False:
+                log.warning(
+                    f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
+                )
+            else:
+                self._user_info["domain"] = team_res["team"]["domain"]
 
     @property
     def channelid(self):
@@ -130,7 +138,7 @@ class SlackPerson(Person):
 
     @property
     def domain(self):
-        raise NotImplementedError
+        return self._user_info.get("domain")
 
     # Compatibility with the generic API.
     client = channelid

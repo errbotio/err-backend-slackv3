@@ -315,7 +315,8 @@ class SlackBackend(ErrBot):
                 try:
                     event_handler = getattr(self, f"_rtm_handle_{event_type}")
                     return event_handler(client, event)
-                except AttributeError:
+                except AttributeError as e:
+                    log.warning(str(e))
                     log.debug(f"RTM event type {event_type} not supported.")
 
             log.info("Connecting to Slack RTM API")
@@ -339,9 +340,9 @@ class SlackBackend(ErrBot):
                 log.info("Using Events API - HTTP listener for request URLs.")
                 if not self.signing_secret:
                     log.fatal(
-                        'You need to set your signing_secret (found under "Bot Integration" on Slack)'
-                        " in the BOT_IDENTITY setting in your configuration. Without this secret I "
-                        "cannot receive events from Slack."
+                        "The BOT_IDENTITY doesn't contain the signing_secret.  Errbot can not "
+                        "receive events without this value.  Check the installation "
+                        "documentation for guidance and review the bot's configuration settings."
                     )
                     sys.exit(1)
                 self.slack_events = SlackEventAdapter(
@@ -525,6 +526,8 @@ class SlackBackend(ErrBot):
                 else:
                     msg.frm = SlackPerson(webclient, user, channel)
                     msg.to = msg.frm
+            msg.extras['url'] = f'https://{msg.frm.domain}.slack.com/archives/' \
+                            f'{event["channel"]}/p{self._ts_for_message(msg).replace(".", "")}'
         else:
             if subtype == "bot_message":
                 msg.frm = SlackRoomBot(
@@ -542,10 +545,6 @@ class SlackBackend(ErrBot):
                 else:
                     msg.to = SlackRoom(webclient=webclient, channelid=channel, bot=self)
                     msg.frm = SlackRoomOccupant(webclient, user, channel, self)
-
-        # TODO: port to slack_sdk
-        # msg.extras['url'] = f'https://{self.slack_web.server.domain}.slack.com/archives/' \
-        #                     f'{channel_link_name}/p{self._ts_for_message(msg).replace(".", "")}'
 
         self.callback_message(msg)
 
@@ -599,12 +598,14 @@ class SlackBackend(ErrBot):
             raise UserNotUniqueError(f"Cannot uniquely identify {username}")
         return user_ids[0]
 
+    @lru_cache(1024)
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
         log.warning(f"get channel name from {id_}")
         room = SlackRoom(self.slack_web, channelid=id_, bot=self)
         return room.channelname
 
+    @lru_cache(1024)
     def channelname_to_channelid(self, name: str):
         """Convert a Slack channel name to its channel ID"""
         log.warning(f"get channel id from {name}")
@@ -683,7 +684,7 @@ class SlackBackend(ErrBot):
         super().send_message(msg)
 
         if msg.parent is not None:
-            # we are asked to reply to a specify thread.
+            # we are asked to reply to a specific thread.
             try:
                 msg.extras["thread_ts"] = self._ts_for_message(msg.parent)
             except KeyError:
@@ -768,7 +769,7 @@ class SlackBackend(ErrBot):
             resp = self.slack_web.files_upload(
                 channels=stream.identifier.channelid, filename=stream.name, file=stream
             )
-            if "ok" in resp and resp["ok"]:
+            if resp.get("ok"):
                 stream.success()
             else:
                 stream.error()
@@ -935,15 +936,16 @@ class SlackBackend(ErrBot):
 
         if text[0] == "<" and text[-1] == ">":
             exception_message = (
-                "Unparseable slack ID, should start with U, B, C, G, D or W (got `%s`)"
+                "Unparseable Slack ID, should start with U, B, C, G, D or W (got `%s`)"
             )
+            if text[1] not in ("@", "#"):
+                raise ValueError(f"Unsupported Slack ID prefix '{text[1]}'. Expected '@' or '#'.")
             text = text[2:-1]
             if text == "":
                 raise ValueError(exception_message % "")
             if text[0] in ("U", "B", "W"):
-                # ~ if "|" in text:
-                    # ~ userid, username = text.split("|")
-                # ~ else:
+                if "|" in text:
+                    raise ValueError("Slack ID can not contain '|'.")
                 userid = text
             elif text[0] in ("C", "G", "D"):
                 if "|" in text:
@@ -952,8 +954,8 @@ class SlackBackend(ErrBot):
                     channelid = text
             else:
                 raise ValueError(exception_message % text)
-        # ~ elif text[0] == "@":
-            # ~ username = text[1:]
+        elif text[0] == "@":
+            username = text[1:]
         elif text[0] == "#":
             plainrep = text[1:]
             if "/" in text:

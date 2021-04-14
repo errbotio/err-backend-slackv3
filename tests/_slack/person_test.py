@@ -155,6 +155,31 @@ class SlackPersonTests(unittest.TestCase):
     """
     )
 
+    TEAM_INFO_OK = json.loads(
+        """
+        {
+            "ok": true,
+            "team": {
+                "id": "T012AB3C4",
+                "name": "My Team",
+                "domain": "example",
+                "email_domain": "example.com",
+                "icon": {
+                    "image_34": "https://...",
+                    "image_44": "https://...",
+                    "image_68": "https://...",
+                    "image_88": "https://...",
+                    "image_102": "https://...",
+                    "image_132": "https://...",
+                    "image_default": true
+                },
+                "enterprise_id": "E1234A12AB",
+                "enterprise_name": "Umbrella Corporation"
+            }
+        }
+        """
+    )
+
     def setUp(self):
         self.webclient = MagicMock()
         self.webclient.users_info.return_value = SlackPersonTests.USER_INFO_OK
@@ -219,22 +244,18 @@ class SlackPersonTests(unittest.TestCase):
         self.assertEqual(self.p.channelname, "general")
         self.webclient.conversations_info.assert_called_once_with(channel="C012AB3CD")
 
-
     def test_channelname_channel_not_found(self):
         self.webclient.conversations_info.return_value = SlackPersonTests.CHANNEL_INFO_FAIL
         with self.assertRaises(RoomDoesNotExistError) as e:
             self.p = SlackPerson(self.webclient, channelid="C012AB3CD")
             self.p.channelname
 
-    def test_channelname_channel_empty_channel_list(self):
-        self.webclient.conversations_list.return_value = SlackPersonTests.CHANNEL_INFO_FAIL
-        with self.assertRaises(RoomDoesNotExistError) as e:
-            self.p = SlackPerson(self.webclient, channelid="C012AB3CD")
-            self.p.channelname
-
     def test_domain(self):
-        with self.assertRaises(NotImplementedError) as e:
-            self.p.domain
+        self.webclient = MagicMock()
+        self.webclient.users_info.return_value = SlackPersonTests.USER_INFO_OK
+        self.webclient.team_info.return_value = SlackPersonTests.TEAM_INFO_OK
+        self.p = SlackPerson(self.webclient, userid="W012A3CDE")
+        self.assertEqual(self.p.domain, "example")
 
     def test_aclattr(self):
         self.assertEqual(self.p.aclattr, "W012A3CDE")

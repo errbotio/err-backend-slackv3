@@ -315,7 +315,7 @@ class SlackTests(unittest.TestCase):
             return person.userid == expected_uid and person.channelid == expected_cid
 
         assert build_from("<#C0XXXXY6P>").name == "general"
-        assert check_person(build_from("<@U12345>"), "U12345", "Cfoo")
+        assert check_person(build_from("<@W012A3CDE>"), "W012A3CDE", "general")
         assert check_person(build_from("@user"), "Utest", "Cfoo")
         assert build_from("#channel").name == "meh"
 

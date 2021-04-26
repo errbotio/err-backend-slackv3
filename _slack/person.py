@@ -138,7 +138,7 @@ class SlackPerson(Person):
 
     @property
     def domain(self):
-        return self._user_info.get("domain")
+        return self._user_info.get("domain", "")
 
     # Compatibility with the generic API.
     client = channelid
@@ -155,7 +155,7 @@ class SlackPerson(Person):
     person = aclattr
 
     def __unicode__(self):
-        return f"<@{self._userid}>"
+        return f"<@{self.aclattr}>"
 
     def __str__(self):
         return self.__unicode__()

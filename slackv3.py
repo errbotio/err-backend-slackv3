@@ -146,9 +146,10 @@ class SlackBackend(ErrBot):
         """
         Register identifiers pickling.
 
-        As Slack needs live objects in its identifiers, we need to override their pickling behavior.
-        But for the unpickling to work we need to use bot.build_identifier, hence the bot parameter here.
-        But then we also need bot for the unpickling so we save it here at module level.
+        As Slack needs live objects in its identifiers, we need to override their pickling
+        behavior. But for the unpickling to work we need to use bot.build_identifier, hence the bot
+        parameter here. But then we also need bot for the unpickling so we save it here at module
+        level.
         """
         SlackBackend.__build_identifier = self.build_identifier
         for cls in (SlackPerson, SlackRoomOccupant, SlackRoom):
@@ -564,8 +565,7 @@ class SlackBackend(ErrBot):
 
     def userid_to_username(self, id_: str):
         """Convert a Slack user ID to their user name"""
-        user = SlackPerson(self.slack_web, userid=id_)
-        return user.username
+        return SlackPerson(self.slack_web, userid=id_).username
 
     def username_to_userid(self, name: str):
         """
@@ -601,16 +601,15 @@ class SlackBackend(ErrBot):
     @lru_cache(1024)
     def channelid_to_channelname(self, id_: str):
         """Convert a Slack channel ID to its channel name"""
-        log.warning(f"get channel name from {id_}")
+        log.debug(f"get channel name from {id_}")
         room = SlackRoom(self.slack_web, channelid=id_, bot=self)
         return room.channelname
 
     @lru_cache(1024)
     def channelname_to_channelid(self, name: str):
         """Convert a Slack channel name to its channel ID"""
-        log.warning(f"get channel id from {name}")
-        room = SlackRoom(self.slack_web, name=name, bot=self)
-        return room.id
+        log.debug(f"get channel id from {name}")
+        return SlackRoom(self.slack_web, name=name, bot=self).id
 
     def channels(
         self,
@@ -939,7 +938,7 @@ class SlackBackend(ErrBot):
                 "Unparseable Slack ID, should start with U, B, C, G, D or W (got `%s`)"
             )
             if text[1] not in ("@", "#"):
-                raise ValueError(f"Unsupported Slack ID prefix '{text[1]}'. Expected '@' or '#'.")
+                raise ValueError(f"Expected '@' or '#' Slack ID prefix but got '{text[1]}'.")
             text = text[2:-1]
             if text == "":
                 raise ValueError(exception_message % "")
@@ -1053,8 +1052,9 @@ class SlackBackend(ErrBot):
             if e.error == "invalid_name":
                 raise ValueError(e.error, "No such emoji", reaction)
             elif e.error in ("no_reaction", "already_reacted"):
-                # This is common if a message was edited after you reacted to it, and you reacted to it again.
-                # Chances are you don't care about this. If you do, call api_call() directly.
+                # This is common if a message was edited after you reacted to it, and you reacted
+                # to it again.  Chances are you don't care about this. If you do, call
+                # api_call() directly.
                 pass
             else:
                 raise SlackAPIResponseError(error=e.error)

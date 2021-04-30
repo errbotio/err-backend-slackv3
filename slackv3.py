@@ -572,7 +572,7 @@ class SlackBackend(ErrBot):
         Convert a Slack user name to their user ID
 
         Raises:
-            UserNotFoundError when no matces are found.
+            UserNotFoundError when no matches are found.
             UserNotUniqueError when multiple names are found.
         Returns:
             User_id if and only if a single username is matched.
@@ -593,9 +593,9 @@ class SlackBackend(ErrBot):
             else:
                 cursor = res["response_metadata"].get("next_cursor", "")
         if len(user_ids) == 0:
-            raise UserDoesNotExistError(f"Cannot find user {username}.")
+            raise UserDoesNotExistError(f"Cannot find user '{username}'.")
         if len(user_ids) > 1:
-            raise UserNotUniqueError(f"Cannot uniquely identify {username}")
+            raise UserNotUniqueError(f"'{username}' isn't unique: {len(user_ids)} matches found.")
         return user_ids[0]
 
     @lru_cache(1024)

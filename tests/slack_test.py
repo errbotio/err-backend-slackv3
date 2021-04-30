@@ -21,6 +21,7 @@ try:
             self.bot_identifier = MagicMock()
             self.bot_identifier.userid.return_value = "ULxxzzz00"
             self.slack_web = MagicMock()
+            self.auth = {"ok": True, "user": "", "user_id": "ULxxzzz00"}
 
         def callback_message(self, msg):
             self.test_msgs.append(msg)
@@ -315,8 +316,8 @@ class SlackTests(unittest.TestCase):
             return person.userid == expected_uid and person.channelid == expected_cid
 
         assert build_from("<#C0XXXXY6P>").name == "general"
-        assert check_person(build_from("<@U12345>"), "U12345", "Cfoo")
-        assert check_person(build_from("@user"), "Utest", "Cfoo")
+        assert check_person(build_from("<@W012A3CDE>"), "W012A3CDE", "C012AB3CD")
+        assert check_person(build_from("@spengler"), "W012A3CDE", "C012AB3CD")
         assert build_from("#channel").name == "meh"
 
         self.assertEqual(
@@ -389,6 +390,9 @@ class SlackTests(unittest.TestCase):
         )
 
     def test_mention_processing(self):
+
+        self.slack.slack_web.conversations_info.return_value = CHANNEL_INFO_DIRECT_1TO1_OK
+        self.slack.slack_web.conversations_open.return_value = CHANNEL_INFO_DIRECT_1TO1_OK
 
         mentions = self.slack.process_mentions
 

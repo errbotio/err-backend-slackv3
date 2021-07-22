@@ -71,3 +71,10 @@ How to set up such an architecture is outside the scope of this readme and is le
 ### Current token with Events Socket-mode client
 Create a current bot token, enable socket mode.  Configure errbot to use the bot and app tokens and start using Slack.
 Read [this document](https://github.com/slackapi/python-slack-sdk/blob/main/docs-src/socket-mode/index.rst) for instructions on setting up Socket-mode.
+
+Ensure the bot is also subscrbed to the following events:
+* `file_created`
+* `file_public`
+* `message.channels`
+* `message.groups`
+* `message.im`

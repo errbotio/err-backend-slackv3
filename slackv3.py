@@ -78,6 +78,7 @@ class SlackBackend(ErrBot):
         self.app_token = identity.get("app_token", None)
 
         # Slack objects will be initialised in the serve_once method.
+        self.auth = None
         self.slack_web = None
         self.slack_rtm = None
         self.slack_events = None

@@ -118,12 +118,15 @@ class SlackPerson(Person):
 
         return self._channel_info[channel_name_key]
 
-    def _cache_channel_info(self):
-        """Retrieve channel info from Slack"""
+    def _cache_channel_info(self, refresh=False):
+        """
+        Retrieve channel info from Slack if there isn't already a channel id cached.
+        :refresh: Boolean to force fetching channel info even if it was already cached.
+        """
         if self.channelid is None:
             raise ValueError("Unable to lookup and undefined channel id.")
 
-        if self._channel_info.get("id") is None:
+        if self._channel_info.get("id") is None or refresh:
             res = self._webclient.conversations_info(channel=self.channelid)
             if res["ok"] is False:
                 raise RoomDoesNotExistError(

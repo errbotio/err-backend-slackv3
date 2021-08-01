@@ -1,3 +1,5 @@
+import re
+
 USER_IS_BOT_HELPTEXT = (
     "Connected to Slack using a bot account, which cannot manage "
     "channels itself (you must invite the bot to channels instead, "
@@ -7,6 +9,20 @@ USER_IS_BOT_HELPTEXT = (
     "For this, you will also need to generate a user token at "
     "https://api.slack.com/web."
 )
+
+# The Slack client automatically turns a channel name into a clickable
+# link if you prefix it with a #. Other clients receive this link as a
+# token matching this regex.
+SLACK_CLIENT_CHANNEL_HYPERLINK = re.compile(r"^<#(?P<id>([CG])[0-9A-Z]+)>$")
+
+COLORS = {
+    "red": "#FF0000",
+    "green": "#008000",
+    "yellow": "#FFA500",
+    "blue": "#0000FF",
+    "white": "#FFFFFF",
+    "cyan": "#00FFFF",
+}
 
 
 class SlackAPIResponseError(RuntimeError):

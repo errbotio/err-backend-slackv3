@@ -10,7 +10,6 @@ from mock import MagicMock
 from _slack.person import *
 from errbot.backends.base import RoomDoesNotExistError
 
-
 log = logging.getLogger(__name__)
 
 

@@ -48,24 +48,15 @@ except ImportError:
     )
     sys.exit(1)
 
-from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
+from _slack.lib import (
+    COLORS,
+    USER_IS_BOT_HELPTEXT,
+    SLACK_CLIENT_CHANNEL_HYPERLINK,
+    SlackAPIResponseError,
+)
 from _slack.markdown import slack_markdown_converter
 from _slack.person import SlackPerson
 from _slack.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
-
-# The Slack client automatically turns a channel name into a clickable
-# link if you prefix it with a #. Other clients receive this link as a
-# token matching this regex.
-SLACK_CLIENT_CHANNEL_HYPERLINK = re.compile(r"^<#(?P<id>([CG])[0-9A-Z]+)>$")
-
-COLORS = {
-    "red": "#FF0000",
-    "green": "#008000",
-    "yellow": "#FFA500",
-    "blue": "#0000FF",
-    "white": "#FFFFFF",
-    "cyan": "#00FFFF",
-}  # Slack doesn't know its colors
 
 
 class SlackBackend(ErrBot):

@@ -457,13 +457,13 @@ class SlackBackend(ErrBot):
         """Event handler for the 'message' event"""
         channel = event["channel"]
         if channel[0] not in "CGD":
-            log.warning("Unknown message type! Unable to handle %s", channel)
+            log.warning(f"Unknown message type! Unable to handle {channel}")
             return
 
         subtype = event.get("subtype", None)
 
         if subtype in ("message_deleted", "channel_topic", "message_replied"):
-            log.debug("Message of type %s, ignoring this event", subtype)
+            log.debug(f"Message of type {subtype}, ignoring this event")
             return
 
         if subtype == "message_changed" and "attachments" in event["message"]:
@@ -492,8 +492,8 @@ class SlackBackend(ErrBot):
 
         text = self.sanitize_uris(text)
 
-        log.debug("Saw an event: %s", pprint.pformat(event))
-        log.debug("Escaped IDs event text: %s", text)
+        log.debug(f"Saw an event: {pprint.pformat(event)}")
+        log.debug(f"Escaped IDs event text: {text}")
 
         msg = Message(
             text,
@@ -707,10 +707,7 @@ class SlackBackend(ErrBot):
 
             msgtype = "direct" if msg.is_direct else "channel"
             log.debug(
-                "Sending %s message to %s (%s).",
-                msgtype,
-                to_humanreadable,
-                to_channel_id,
+                f"Sending {msgtype} message to {to_humanreadable} ({to_channel_id})."
             )
             body = self.md.convert(msg.body)
             log.debug("Message size: %d.", len(body))
@@ -789,11 +786,8 @@ class SlackBackend(ErrBot):
         """
         stream = Stream(user, fsource, name, size, stream_type)
         log.debug(
-            "Requesting upload of %s to %s (size hint: %d, stream type: %s).",
-            name,
-            user.channelname,
-            size,
-            stream_type,
+            f"Requesting upload of {name} to {user.channelname} "
+            f"(size hint: {size}, stream type: {stream_type})."
         )
         self.thread_pool.apply_async(self._slack_upload, (stream,))
         return stream
@@ -839,7 +833,7 @@ class SlackBackend(ErrBot):
                 "as_user": "true",
             }
             try:
-                log.debug("Sending data:\n%s", data)
+                log.debug(f"Sending data:\n{data}")
                 self.slack_web.chat_postMessage(**data)
             except Exception:
                 log.exception(

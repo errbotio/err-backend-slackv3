@@ -94,13 +94,14 @@ class SlackPerson(Person):
         else:
             for attribute in ["real_name", "display_name", "email"]:
                 self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+
             team_res = self._webclient.team_info(team=res["user"]["team_id"])
-            if team_res["ok"] == False:
+            if team_res["ok"]:
+                self._user_info["domain"] = team_res["team"]["domain"]
+            else:
                 log.warning(
                     f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
                 )
-            else:
-                self._user_info["domain"] = team_res["team"]["domain"]
 
     @property
     def channelid(self):

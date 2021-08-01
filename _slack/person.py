@@ -19,8 +19,8 @@ class SlackPerson(Person):
         Errbot Person composition
         {
             person: user.id,
-            nick: user.profile.display_name or profile.display_name_normalized
-            fullname: user.profile.real_name or profile.real_name_normalized
+            nick: user.profile.display_name
+            fullname: user.profile.real_name
             client: conversation.channel.id
             email: user.profile.email (optional)
             domain: team.domain (used in archive url)

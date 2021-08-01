@@ -406,7 +406,7 @@ class SlackTests(unittest.TestCase):
         self.assertEqual(
             mentions("<@U1><@U2><@U3>"),
             (
-                "@U1@U2@U3",
+                "<@U1><@U2><@U3>",
                 [
                     self.slack.build_identifier("<@U1>"),
                     self.slack.build_identifier("<@U2>"),
@@ -417,13 +417,13 @@ class SlackTests(unittest.TestCase):
 
         self.assertEqual(
             mentions("Is <@U12345>: here?"),
-            ("Is @U12345: here?", [self.slack.build_identifier("<@U12345>")]),
+            ("Is <@U12345>: here?", [self.slack.build_identifier("<@U12345>")]),
         )
 
         self.assertEqual(
             mentions("<@U12345> told me about @a and <@U56789> told me about @b"),
             (
-                "@U12345 told me about @a and @U56789 told me about @b",
+                "<@U12345> told me about @a and <@U56789> told me about @b",
                 [
                     self.slack.build_identifier("<@U12345>"),
                     self.slack.build_identifier("<@U56789>"),
@@ -434,7 +434,7 @@ class SlackTests(unittest.TestCase):
         self.assertEqual(
             mentions("!these!<@UABCDE>!mentions! will !still!<@UFGHIJ>!work!"),
             (
-                "!these!@UABCDE!mentions! will !still!@UFGHIJ!work!",
+                "!these!<@UABCDE>!mentions! will !still!<@UFGHIJ>!work!",
                 [
                     self.slack.build_identifier("<@UABCDE>"),
                     self.slack.build_identifier("<@UFGHIJ>"),

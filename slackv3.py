@@ -710,7 +710,7 @@ class SlackBackend(ErrBot):
                 f"Sending {msgtype} message to {to_humanreadable} ({to_channel_id})."
             )
             body = self.md.convert(msg.body)
-            log.debug("Message size: %d.", len(body))
+            log.debug(f"Message size: {len(body)}.")
 
             parts = self.prepare_message_body(body, self.message_size_limit)
 

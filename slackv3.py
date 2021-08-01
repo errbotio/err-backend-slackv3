@@ -1135,7 +1135,7 @@ class SlackBackend(ErrBot):
             if isinstance(identifier, SlackPerson):
                 log.debug(f"Someone mentioned user {identifier}")
                 mentioned.append(identifier)
-                text = text.replace(word, f"@{identifier.userid}")
+                text = text.replace(word, f"{identifier}")
             elif isinstance(identifier, SlackRoom):
                 log.debug(f"Someone mentioned channel {identifier}")
                 mentioned.append(identifier)

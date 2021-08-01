@@ -1,4 +1,5 @@
 import logging
+import pdb
 import os
 import sys
 import json
@@ -14,7 +15,7 @@ log = logging.getLogger(__name__)
 try:
     import slackv3 as slack
 
-    class TestSlackBackend(slack.SlackBackend):
+    class MockedSlackBackend(slack.SlackBackend):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.test_msgs = []
@@ -187,7 +188,7 @@ class SlackTests(unittest.TestCase):
         config.BOT_PREFIX = "!"
         config.CHATROOM_FN = "blah"
 
-        self.slack = TestSlackBackend(config)
+        self.slack = MockedSlackBackend(config)
 
     def testBotMessageWithAttachments(self):
         attachment = {

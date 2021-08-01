@@ -518,8 +518,10 @@ class SlackBackend(ErrBot):
                 else:
                     msg.frm = SlackPerson(webclient, user, channel)
                     msg.to = msg.frm
-            msg.extras['url'] = f'https://{msg.frm.domain}.slack.com/archives/' \
-                            f'{event["channel"]}/p{self._ts_for_message(msg).replace(".", "")}'
+            msg.extras["url"] = (
+                f"https://{msg.frm.domain}.slack.com/archives/"
+                f'{event["channel"]}/p{self._ts_for_message(msg).replace(".", "")}'
+            )
         else:
             if subtype == "bot_message":
                 msg.frm = SlackRoomBot(
@@ -571,7 +573,6 @@ class SlackBackend(ErrBot):
         username = name.lstrip("@")
         if username == self.auth["user"]:
             return self.bot_identifier.userid
-
         user_ids = []
         cursor = None
         while cursor != "":
@@ -586,7 +587,9 @@ class SlackBackend(ErrBot):
         if len(user_ids) == 0:
             raise UserDoesNotExistError(f"Cannot find user '{username}'.")
         if len(user_ids) > 1:
-            raise UserNotUniqueError(f"'{username}' isn't unique: {len(user_ids)} matches found.")
+            raise UserNotUniqueError(
+                f"'{username}' isn't unique: {len(user_ids)} matches found."
+            )
         return user_ids[0]
 
     @lru_cache(1024)
@@ -923,7 +926,9 @@ class SlackBackend(ErrBot):
                 "Unparseable Slack ID, should start with U, B, C, G, D or W (got `%s`)"
             )
             if text[1] not in ("@", "#"):
-                raise ValueError(f"Expected '@' or '#' Slack ID prefix but got '{text[1]}'.")
+                raise ValueError(
+                    f"Expected '@' or '#' Slack ID prefix but got '{text[1]}'."
+                )
             text = text[2:-1]
             if text == "":
                 raise ValueError(exception_message % "")
@@ -962,7 +967,6 @@ class SlackBackend(ErrBot):
         username, userid, channelname, channelid = self.extract_identifiers_from_string(
             txtrep
         )
-
         if userid is None and username is not None:
             userid = self.username_to_userid(username)
         if channelid is None and channelname is not None:

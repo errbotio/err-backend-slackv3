@@ -19,8 +19,8 @@ class SlackPerson(Person):
         Errbot Person composition
         {
             person: user.id,
-            nick: user.profile.display_name or profile.display_name_normalized
-            fullname: user.profile.real_name or profile.real_name_normalized
+            nick: user.profile.display_name
+            fullname: user.profile.real_name
             client: conversation.channel.id
             email: user.profile.email (optional)
             domain: team.domain (used in archive url)
@@ -94,13 +94,14 @@ class SlackPerson(Person):
         else:
             for attribute in ["real_name", "display_name", "email"]:
                 self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+
             team_res = self._webclient.team_info(team=res["user"]["team_id"])
-            if team_res["ok"] == False:
+            if team_res["ok"]:
+                self._user_info["domain"] = team_res["team"]["domain"]
+            else:
                 log.warning(
                     f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
                 )
-            else:
-                self._user_info["domain"] = team_res["team"]["domain"]
 
     @property
     def channelid(self):
@@ -117,12 +118,15 @@ class SlackPerson(Person):
 
         return self._channel_info[channel_name_key]
 
-    def _cache_channel_info(self):
-        """Retrieve channel info from Slack"""
+    def _cache_channel_info(self, refresh=False):
+        """
+        Retrieve channel info from Slack if there isn't already a channel id cached.
+        :refresh: Boolean to force fetching channel info even if it was already cached.
+        """
         if self.channelid is None:
             raise ValueError("Unable to lookup and undefined channel id.")
 
-        if self._channel_info.get("id") is None:
+        if self._channel_info.get("id") is None or refresh:
             res = self._webclient.conversations_info(channel=self.channelid)
             if res["ok"] is False:
                 raise RoomDoesNotExistError(

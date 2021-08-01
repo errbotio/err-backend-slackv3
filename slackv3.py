@@ -48,24 +48,15 @@ except ImportError:
     )
     sys.exit(1)
 
-from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
+from _slack.lib import (
+    COLORS,
+    USER_IS_BOT_HELPTEXT,
+    SLACK_CLIENT_CHANNEL_HYPERLINK,
+    SlackAPIResponseError,
+)
 from _slack.markdown import slack_markdown_converter
 from _slack.person import SlackPerson
 from _slack.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
-
-# The Slack client automatically turns a channel name into a clickable
-# link if you prefix it with a #. Other clients receive this link as a
-# token matching this regex.
-SLACK_CLIENT_CHANNEL_HYPERLINK = re.compile(r"^<#(?P<id>([CG])[0-9A-Z]+)>$")
-
-COLORS = {
-    "red": "#FF0000",
-    "green": "#008000",
-    "yellow": "#FFA500",
-    "blue": "#0000FF",
-    "white": "#FFFFFF",
-    "cyan": "#00FFFF",
-}  # Slack doesn't know its colors
 
 
 class SlackBackend(ErrBot):
@@ -87,6 +78,7 @@ class SlackBackend(ErrBot):
         self.app_token = identity.get("app_token", None)
 
         # Slack objects will be initialised in the serve_once method.
+        self.auth = None
         self.slack_web = None
         self.slack_rtm = None
         self.slack_events = None
@@ -466,13 +458,13 @@ class SlackBackend(ErrBot):
         """Event handler for the 'message' event"""
         channel = event["channel"]
         if channel[0] not in "CGD":
-            log.warning("Unknown message type! Unable to handle %s", channel)
+            log.warning(f"Unknown message type! Unable to handle {channel}")
             return
 
         subtype = event.get("subtype", None)
 
         if subtype in ("message_deleted", "channel_topic", "message_replied"):
-            log.debug("Message of type %s, ignoring this event", subtype)
+            log.debug(f"Message of type {subtype}, ignoring this event")
             return
 
         if subtype == "message_changed" and "attachments" in event["message"]:
@@ -501,8 +493,8 @@ class SlackBackend(ErrBot):
 
         text = self.sanitize_uris(text)
 
-        log.debug("Saw an event: %s", pprint.pformat(event))
-        log.debug("Escaped IDs event text: %s", text)
+        log.debug(f"Saw an event: {pprint.pformat(event)}")
+        log.debug(f"Escaped IDs event text: {text}")
 
         msg = Message(
             text,
@@ -527,8 +519,10 @@ class SlackBackend(ErrBot):
                 else:
                     msg.frm = SlackPerson(webclient, user, channel)
                     msg.to = msg.frm
-            msg.extras['url'] = f'https://{msg.frm.domain}.slack.com/archives/' \
-                            f'{event["channel"]}/p{self._ts_for_message(msg).replace(".", "")}'
+            msg.extras["url"] = (
+                f"https://{msg.frm.domain}.slack.com/archives/"
+                f'{event["channel"]}/p{self._ts_for_message(msg).replace(".", "")}'
+            )
         else:
             if subtype == "bot_message":
                 msg.frm = SlackRoomBot(
@@ -580,7 +574,6 @@ class SlackBackend(ErrBot):
         username = name.lstrip("@")
         if username == self.auth["user"]:
             return self.bot_identifier.userid
-
         user_ids = []
         cursor = None
         while cursor != "":
@@ -595,7 +588,9 @@ class SlackBackend(ErrBot):
         if len(user_ids) == 0:
             raise UserDoesNotExistError(f"Cannot find user '{username}'.")
         if len(user_ids) > 1:
-            raise UserNotUniqueError(f"'{username}' isn't unique: {len(user_ids)} matches found.")
+            raise UserNotUniqueError(
+                f"'{username}' isn't unique: {len(user_ids)} matches found."
+            )
         return user_ids[0]
 
     @lru_cache(1024)
@@ -716,13 +711,10 @@ class SlackBackend(ErrBot):
 
             msgtype = "direct" if msg.is_direct else "channel"
             log.debug(
-                "Sending %s message to %s (%s).",
-                msgtype,
-                to_humanreadable,
-                to_channel_id,
+                f"Sending {msgtype} message to {to_humanreadable} ({to_channel_id})."
             )
             body = self.md.convert(msg.body)
-            log.debug("Message size: %d.", len(body))
+            log.debug(f"Message size: {len(body)}.")
 
             parts = self.prepare_message_body(body, self.message_size_limit)
 
@@ -798,11 +790,8 @@ class SlackBackend(ErrBot):
         """
         stream = Stream(user, fsource, name, size, stream_type)
         log.debug(
-            "Requesting upload of %s to %s (size hint: %d, stream type: %s).",
-            name,
-            user.channelname,
-            size,
-            stream_type,
+            f"Requesting upload of {name} to {user.channelname} "
+            f"(size hint: {size}, stream type: {stream_type})."
         )
         self.thread_pool.apply_async(self._slack_upload, (stream,))
         return stream
@@ -848,7 +837,7 @@ class SlackBackend(ErrBot):
                 "as_user": "true",
             }
             try:
-                log.debug("Sending data:\n%s", data)
+                log.debug(f"Sending data:\n{data}")
                 self.slack_web.chat_postMessage(**data)
             except Exception:
                 log.exception(
@@ -938,7 +927,9 @@ class SlackBackend(ErrBot):
                 "Unparseable Slack ID, should start with U, B, C, G, D or W (got `%s`)"
             )
             if text[1] not in ("@", "#"):
-                raise ValueError(f"Expected '@' or '#' Slack ID prefix but got '{text[1]}'.")
+                raise ValueError(
+                    f"Expected '@' or '#' Slack ID prefix but got '{text[1]}'."
+                )
             text = text[2:-1]
             if text == "":
                 raise ValueError(exception_message % "")
@@ -977,7 +968,6 @@ class SlackBackend(ErrBot):
         username, userid, channelname, channelid = self.extract_identifiers_from_string(
             txtrep
         )
-
         if userid is None and username is not None:
             userid = self.username_to_userid(username)
         if channelid is None and channelname is not None:
@@ -1146,7 +1136,7 @@ class SlackBackend(ErrBot):
             if isinstance(identifier, SlackPerson):
                 log.debug(f"Someone mentioned user {identifier}")
                 mentioned.append(identifier)
-                text = text.replace(word, f"@{identifier.userid}")
+                text = text.replace(word, f"{identifier}")
             elif isinstance(identifier, SlackRoom):
                 log.debug(f"Someone mentioned channel {identifier}")
                 mentioned.append(identifier)

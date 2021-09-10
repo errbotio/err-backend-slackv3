@@ -1,3 +1,4 @@
 slack-sdk>=3.4.0
 slackeventsapi==2.2.1
 aiohttp==3.7.3
+markdown>=3.3.5

@@ -9,13 +9,29 @@ log = logging.getLogger(__name__)
 class SlackPerson(Person):
     """
     This class describes a person on Slack's network.
+    Reference:
+        https://api.slack.com/changelog/2016-08-11-user-id-format-changes
+        https://api.slack.com/docs/conversations-api
+
+        slack user:https://api.slack.com/methods/users.info
+        slack channel: https://api.slack.com/methods/conversations.info
+
+        Errbot Person composition
+        {
+            person: user.id,
+            nick: user.profile.display_name
+            fullname: user.profile.real_name
+            client: conversation.channel.id
+            email: user.profile.email (optional)
+            domain: team.domain (used in archive url)
+        }
     """
 
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
-        if userid is not None and userid[0] not in ("U", "B", "W"):
+        if userid is not None and userid[0] not in ("U", "W", "B"):
             raise Exception(
                 f"This is not a Slack user or bot id: {userid} "
-                "(should start with U, B or W)"
+                "(should start with B, U or W)"
             )
 
         if channelid is not None and channelid[0] not in ("D", "C", "G"):
@@ -25,68 +41,67 @@ class SlackPerson(Person):
             )
 
         self._userid = userid
+        self._user_info = {}
         self._channelid = channelid
-        self._channelname = None
+        self._channel_info = {}
         self._webclient = webclient
-        self._info = None
+
+        if self._userid is not None:
+            self._cache_user_info()
+        if self._channelid is not None:
+            self._cache_channel_info()
 
     @property
     def userid(self):
+        """
+        Slack ID is the only secure way to uniquely identify a user.
+        """
         return self._userid
 
     @property
-    def info(self):
-        """
-        Return the user info, but load it if we didn't do it yet.
-
-        :rtype: dict[str, any]
-        :return: the user info
-        """
-        if not self._info:
-            self._info = self._get_user_info()
-        return self._info
-
-    @property
     def username(self):
-        """Convert a Slack user ID to their user name"""
-        profile = self.info.get("profile")
-        if profile:
-            return profile['display_name_normalized'] or profile['real_name_normalized']
-        else:
-            return self.info["name"]
+        """
+        Convert a Slack user ID to their display name.
+        """
+        return self._user_info.get("display_name", "")
 
     @property
     def fullname(self):
         """Convert a Slack user ID to their full name"""
-        profile = self.info.get("profile")
-        if profile:
-            return profile['real_name']
-        else:
-            return self.info["real_name"]
+        return self._user_info.get("real_name", "")
 
     @property
     def email(self):
         """Convert a Slack user ID to their user email"""
-        profile = self.info.get("profile")
-        if profile:
-            # 'email' might not tbe there
-            return profile.get('email')
-        else:
-            # 'email' might not the there
-            return self.info.get('email')
+        return self._user_info.get("email", "")
 
-    def _get_user_info(self):
+    def _cache_user_info(self):
         """
         Cache all user info and return data.
 
         :rtype: dict[str, any]
         :return: the user info
         """
-        user_info = self._webclient.users_info(user=self._userid)["user"]
-        if user_info is None:
-            log.error(f"Cannot find user with ID {self._userid}")
-            return f"<{self._userid}>"
-        return user_info
+        if self._userid is None:
+            raise ValueError("Unable to look up an undefined user id.")
+
+        res = self._webclient.users_info(user=self._userid)
+
+        if res["ok"] is False:
+            log.error(
+                f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
+            )
+        else:
+            for attribute in ["real_name", "display_name", "email"]:
+                self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+
+            team_res = self._webclient.team_info(team=res["user"]["team_id"])
+            if team_res["ok"]:
+                self._user_info["domain"] = team_res["team"]["domain"]
+            else:
+                log.warning(
+                    f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
+                )
 
     @property
     def channelid(self):
@@ -94,30 +109,40 @@ class SlackPerson(Person):
 
     @property
     def channelname(self):
-        """Convert a Slack channel ID to its channel name"""
+        """
+        Convert a Slack channel ID to its channel name
+        """
+        channel_name_key = "name"
+        if self._channel_info["is_im"] is True:
+            channel_name_key = "user"
+
+        return self._channel_info[channel_name_key]
+
+    def _cache_channel_info(self, refresh=False):
+        """
+        Retrieve channel info from Slack if there isn't already a channel id cached.
+        :refresh: Boolean to force fetching channel info even if it was already cached.
+        """
         if self.channelid is None:
-            return None
+            raise ValueError("Unable to lookup and undefined channel id.")
 
-        if self._channelname:
-            return self._channelname
-
-        channel = self._webclient.conversations_info(channel=self.channelid)
-
-        if not channel or not channel['ok']:
-            raise RoomDoesNotExistError(
-                f"No channel with ID {self._channelid} exists."
-            )
-        channel = channel['channel']
-
-        if channel['is_im']:
-            self._channelname = channel["user"]
-        else:
-            self._channelname = channel["name"]
-        return self._channelname
+        if self._channel_info.get("id") is None or refresh:
+            res = self._webclient.conversations_info(channel=self.channelid)
+            if res["ok"] is False:
+                raise RoomDoesNotExistError(
+                    f"No channel with ID {self._channelid} exists.  Slack error {res['error']}"
+                )
+            if res["channel"]["id"] != self._channelid:
+                raise ValueError(
+                    "Inconsistent data detected.  "
+                    f"{res['channel']['id']} does not equal {self._channelid}"
+                )
+            for attribute in ["name", "user", "is_im", "is_mpim", "id"]:
+                self._channel_info[attribute] = res["channel"].get(attribute)
 
     @property
     def domain(self):
-        raise NotImplementedError
+        return self._user_info.get("domain", "")
 
     # Compatibility with the generic API.
     client = channelid
@@ -128,12 +153,13 @@ class SlackPerson(Person):
     def aclattr(self):
         # Note: Don't use str(self) here because that will return
         # an incorrect format from SlackMUCOccupant.
-        return f"@{self.username}"
+        # Only use user id as per slack's user-id-format-changes article.
+        return f"{self._userid}"
 
     person = aclattr
 
     def __unicode__(self):
-        return f"@{self.username}"
+        return f"<@{self.aclattr}>"
 
     def __str__(self):
         return self.__unicode__()
@@ -146,4 +172,3 @@ class SlackPerson(Person):
 
     def __hash__(self):
         return self.userid.__hash__()
-

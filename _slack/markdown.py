@@ -1,10 +1,10 @@
 import re
 
+from errbot.rendering.ansiext import IMTEXT_CHRS, AnsiExtension, enable_format
+
 from markdown import Markdown
 from markdown.extensions.extra import ExtraExtension
 from markdown.preprocessors import Preprocessor
-
-from errbot.rendering.ansiext import IMTEXT_CHRS, AnsiExtension, enable_format
 
 MARKDOWN_LINK_REGEX = re.compile(
     r"(?<!!)\[(?P<text>[^\]]+?)\]\((?P<uri>[a-zA-Z0-9]+?:\S+?)\)"

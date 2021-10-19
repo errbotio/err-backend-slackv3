@@ -9,8 +9,10 @@ from errbot.backends.base import (
     UserDoesNotExistError,
 )
 
-from _slack.lib import USER_IS_BOT_HELPTEXT
+from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
 from _slack.person import SlackPerson
+
+log = logging.getLogger(__name__)
 
 try:
     from slack_sdk.web import WebClient
@@ -22,8 +24,6 @@ except ImportError:
         "You can do `pip install errbot[slack-sdk]` to install them."
     )
     sys.exit(1)
-
-log = logging.getLogger(__name__)
 
 
 class SlackRoom(Room):
@@ -62,7 +62,6 @@ class SlackRoom(Room):
         channel_id = None
         cursor = None
         while channel_id is None and cursor != "":
-            log.debug(f"CURSOR={cursor}")
             res = self._webclient.conversations_list(
                 cursor=cursor,
                 limit=1000,
@@ -332,9 +331,9 @@ class SlackRoomBot(RoomOccupant, SlackBot):
     This class represents a bot inside a MUC.
     """
 
-    def __init__(self, sc, bot_id, bot_username, channelid, bot):
-        super().__init__(sc, bot_id, bot_username)
-        self._room = SlackRoom(webclient=sc, channelid=channelid, bot=bot)
+    def __init__(self, webclient, bot_id, bot_username, channelid, bot):
+        super().__init__(webclient, bot_id, bot_username)
+        self._room = SlackRoom(webclient=webclient, channelid=channelid, bot=bot)
 
     @property
     def room(self):

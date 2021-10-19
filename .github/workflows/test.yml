@@ -1,4 +1,4 @@
-name: Test
+name: slackv3-tests
 
 on:
   push:
@@ -22,7 +22,10 @@ jobs:
         run: |
           pip install errbot[slack] mock pytest pytest-pep8 coverage
           pip install -r requirements.txt
-      - name: test
+      - name: unittests
+        run: |
+          pytest
+      - name: coverage
         run: |
           coverage run slackv3.py --pep8
-          coverage report -m --fail-under 80
+          coverage report -m --fail-under 24

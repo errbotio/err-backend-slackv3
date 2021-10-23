@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - Added Github actions for unit tests, codestyle, lint.
   - Added Python 3.10 to unit tets
   - Added unit tests.
+  - Added handler for reaction add/remove.
 
 ### Changed
   - Person field returns unique identifier instead of @ usernames which aren't guaranteed to be unique.

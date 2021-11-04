@@ -174,7 +174,6 @@ class SlackRoom(Room):
                 raise RoomError(e)
         self._id = None
 
-    # TODO: Update this method to use slacksdk.
     @property
     def exists(self):
         channels = self._bot.channels(joined_only=False, exclude_archived=False)
@@ -237,17 +236,17 @@ class SlackRoom(Room):
                 )
         return occupants
 
-    # TODO: Update this method to use slacksdk.
     def invite(self, *args):
         users = {
             user["name"]: user["id"]
             for user in self._webclient.api_call("users.list")["members"]
         }
+
         for user in args:
             if user not in users:
                 raise UserDoesNotExistError(f'User "{user}" not found.')
             log.info("Inviting %s into %s (%s)", user, self, self.id)
-            method = "groups.invite" if self.private else "channels.invite"
+            method = "conversations.invite"
             response = self._bot.api_call(
                 method,
                 data={"channel": self.id, "user": users[user]},

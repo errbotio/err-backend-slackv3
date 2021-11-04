@@ -1017,7 +1017,7 @@ class SlackBackend(ErrBot):
 
             ts = self._ts_for_message(msg)
 
-            self.slackweb.api_call(
+            self.api_call(
                 method,
                 data={"channel": to_channel_id, "timestamp": ts, "name": reaction},
             )

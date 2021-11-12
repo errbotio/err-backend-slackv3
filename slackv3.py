@@ -41,7 +41,7 @@ try:
     from slack_sdk.web import WebClient
     from slackeventsapi import SlackEventAdapter
 except ImportError:
-    log.exception("Could not start the SlackSDK backend")
+    log.exception("Could not start the SlackV3 backend")
     log.fatal(
         "You need to install python modules in order to use the Slack backend.\n"
         "You can do `pip install errbot[slack-sdk]` to install them."
@@ -309,7 +309,7 @@ class SlackBackend(ErrBot):
                     log.debug(f"RTM event type {event_type} not supported.")
 
             log.info("Connecting to Slack RTM API")
-            self.slack_rtm.start()
+            self.slack_rtm.connect()
         else:
             # If the Application token is set, run in socket mode otherwise use Request URL.
             if self.app_token:

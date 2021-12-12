@@ -124,7 +124,7 @@ class SlackPerson(Person):
         :refresh: Boolean to force fetching channel info even if it was already cached.
         """
         if self.channelid is None:
-            raise ValueError("Unable to lookup and undefined channel id.")
+            raise ValueError("Unable to lookup an undefined channel id.")
 
         if self._channel_info.get("id") is None or refresh:
             res = self._webclient.conversations_info(channel=self.channelid)

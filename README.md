@@ -6,11 +6,8 @@ Slack Events and Real Time Messaging backend for Errbot
 
 This backend has been developed to support both the Slack Events and Real Time Messaging APIs using the latest SDK from Slack.
 
-The backend has been made available outside the core errbot project to allow development and user
-feedback to happen on independent release cycles.
+The backend has been made available outside the core errbot project to allow development and user feedback to happen on independent release cycles.
 
-It is the hope and intention of the authors that this backend will eventually be incorporated as part
-of the official errbot project.
 
 ## Connection Methods
 
@@ -30,14 +27,14 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
 
 1. Create the errbot virtual environment
 
-    ```python
+    ```bash
     mkdir -p /opt/errbot/backend
     virtualenv --python=python3 /opt/errbot/virtualenv
     ```
 
 2. Install and initialise errbot. [See here for details](https://errbot.readthedocs.io/en/latest/user_guide/setup.html)
 
-    ```python
+    ```bash
     source /opt/errbot/virtualenv/bin/activate
     pip install errbot
     cd /opt/errbot
@@ -53,7 +50,7 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
 
 4. Clone `err-backend-slackv3` into the backend directory and install module dependencies.
 
-    ```python
+    ```bash
     cd /opt/errbot/backend
     git clone https://github.com/errbotio/err-backend-slackv3
     pip install -r /opt/errbot/backend/err-backend-slackv3/requirements.txt
@@ -93,3 +90,15 @@ Ensure the bot is also subscrbed to the following events:
 - `message.channels`
 - `message.groups`
 - `message.im`
+
+Moving from older slack backends
+
+### Bot Admins
+Slack changed the way users are uniquely identified from display name `@some_name` to user id `Uxxxxxx`.
+Errbot configuration will need to be updated before administrators can be correctly identified aginst
+the ACL sets.
+
+The UserID is in plain text format.  It can be found in the the Slack full profile page or using the `!whoami` command (`person` field).
+
+Because BOT_ADMINS is defined as plain text User IDs, they can not be used to send notifications.  The mention format
+`<@Uxxxxx>` must be used in the BOT_ADMINS_NOTIFICATIONS configuration setting for errbot to initiate message to bot administrators.

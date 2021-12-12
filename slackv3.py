@@ -305,7 +305,6 @@ class SlackBackend(ErrBot):
                     event_handler = getattr(self, f"_rtm_handle_{event_type}")
                     return event_handler(client, event)
                 except AttributeError as e:
-                    log.warning(str(e))
                     log.debug(f"RTM event type {event_type} not supported.")
 
             log.info("Connecting to Slack RTM API")
@@ -498,7 +497,6 @@ class SlackBackend(ErrBot):
             user = event.get("user", event.get("bot_id"))
 
         text, mentioned = self.process_mentions(text)
-
         text = self.sanitize_uris(text)
 
         log.debug(f"Saw an event: {pprint.pformat(event)}")
@@ -949,8 +947,9 @@ class SlackBackend(ErrBot):
         Supports strings with the formats accepted by
         :func:`~extract_identifiers_from_string`.
         """
-        log.debug(f"building an identifier from {txtrep}.")
+        log.debug(f"Building an identifier from {txtrep}.")
         username, userid, channelname, channelid = self.extract_identifiers_from_string(txtrep)
+
         if userid is None and username is not None:
             userid = self.username_to_userid(username)
         if channelid is None and channelname is not None:
@@ -1083,10 +1082,11 @@ class SlackBackend(ErrBot):
         <http://example.org|example.org>
         <http://example.org>
 
+        Returns a plain text representation of the URI.
         :returns:
             string
         """
-        text = re.sub(r"<([^|>]+)\|([^|>]+)>", r"\2", text)
+        text = re.sub(r"<([^#][^|>]+)\|([^|>]+)>", r"\2", text)
         text = re.sub(r"<(http([^>]+))>", r"\1", text)
 
         return text
@@ -1118,6 +1118,6 @@ class SlackBackend(ErrBot):
             elif isinstance(identifier, SlackRoom):
                 log.debug(f"Someone mentioned channel {identifier}")
                 mentioned.append(identifier)
-                text = text.replace(word, f"#{identifier.channelid}")
+                text = text.replace(word, f"{identifier}")
 
         return text, mentioned

@@ -7,15 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.2.0] Unreleased
 ### Added
 ### Changed
+### Fixed
+### Removed
+
+## [0.1.1] 2021-12-09
+### Added
+  - Documentation for configuring BOT_ADMIN and BOT_ADMIN_NOTIFICATION.
+### Changed
+### Fixed
+  - Channel mentions caused messages to be silently dropped. #57 (@nzlosh)
 ### Removed
 
 ## [0.1.0] 2021-11-25
 ### Added
-  - Added changelog file.
-  - Added Github actions for unit tests, codestyle, lint.
-  - Added Python 3.10 to unit tets
-  - Added unit tests.
-  - Added handler for reaction add/remove.
+  - changelog file.
+  - Github actions for unit tests, codestyle, lint.
+  - unit tests.
+  - Python 3.10 to unit tets
+  - handler for reaction add/remove events.
 
 ### Changed
   - Person field returns unique identifier instead of @ usernames which aren't guaranteed to be unique.

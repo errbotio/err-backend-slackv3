@@ -8,11 +8,10 @@ This backend has been developed to support both the Slack Events and Real Time M
 
 The backend has been made available outside the core errbot project to allow development and user feedback to happen on independent release cycles.
 
-
 ## Connection Methods
 
-Slack has been making changes to their OAuth and API architecture that can seem quite confusing.  No
-matter which OAuth bot token you're using or the API architecture in your environment, slackv3 has got you covered.
+Slack has been making changes to their OAuth and API architecture that can seem quite confusing.
+No matter which OAuth bot token you're using or the API architecture in your environment, `slackv3` has got you covered.
 
 The backend will automatically detect which token and architecture you have and start listening for Slack events in the right way:
 
@@ -45,7 +44,7 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
 
     ```python
     BACKEND="SlackV3"
-    BOT_EXTRA_BACKEND_DIR=/opt/errbot/backend
+    BOT_EXTRA_BACKEND_DIR="/opt/errbot/backend"
     ```
 
 4. Clone `err-backend-slackv3` into the backend directory and install module dependencies.
@@ -53,6 +52,8 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
     ```bash
     cd /opt/errbot/backend
     git clone https://github.com/errbotio/err-backend-slackv3
+    # to get a specific release use `--branch <release-tag>`, e.g. `--branch v0.1.0`
+    git clone --depth 1 https://github.com/errbotio/err-backend-slackv3
     pip install -r /opt/errbot/backend/err-backend-slackv3/requirements.txt
     ```
 
@@ -83,7 +84,7 @@ How to set up such an architecture is outside the scope of this readme and is le
 Create a current bot token, enable socket mode.  Configure errbot to use the bot and app tokens and start using Slack.
 Read [this document](https://github.com/slackapi/python-slack-sdk/blob/main/docs-src/socket-mode/index.rst) for instructions on setting up Socket-mode.
 
-Ensure the bot is also subscrbed to the following events:
+Ensure the bot is also subscribed to the following events:
 
 - `file_created`
 - `file_public`

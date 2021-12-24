@@ -30,7 +30,14 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
     mkdir -p /opt/errbot/backend
     virtualenv --python=python3 /opt/errbot/virtualenv
     ```
-
+    
+    or 
+    
+    ```bash
+    mkdir -p /opt/errbot/backend
+    python3 -m venv /opt/errbot/virtualenv
+    ```
+    
 2. Install and initialise errbot. [See here for details](https://errbot.readthedocs.io/en/latest/user_guide/setup.html)
 
     ```bash

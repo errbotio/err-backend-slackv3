@@ -117,6 +117,8 @@ class SlackRoom(Room):
         """Return the ID of this room"""
         return self._cache["id"]
 
+    aclattr = id
+
     @property
     def channelid(self):
         """Return the Slack representation of the channel in the form <#CHANNELID|CHANNELNAME>"""

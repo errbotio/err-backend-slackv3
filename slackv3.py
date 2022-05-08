@@ -117,7 +117,7 @@ class SlackBackend(ErrBot):
         if data is None:
             data = {}
 
-        response = self.slack_web.api_call(method, json=data)
+        response = self.slack_web.api_call(method, **data)
 
         if raise_errors and not response["ok"]:
             raise SlackAPIResponseError(
@@ -1018,7 +1018,7 @@ class SlackBackend(ErrBot):
 
             self.api_call(
                 method,
-                data={"channel": to_channel_id, "timestamp": ts, "name": reaction},
+                {"json": {"channel": to_channel_id, "timestamp": ts, "name": reaction}},
             )
         except SlackAPIResponseError as e:
             if e.error == "invalid_name":

@@ -1018,7 +1018,7 @@ class SlackBackend(ErrBot):
 
             self.api_call(
                 method,
-                data={"channel": to_channel_id, "timestamp": ts, "name": reaction},
+                data={"json": {"channel": to_channel_id, "timestamp": ts, "name": reaction}},
             )
         except SlackAPIResponseError as e:
             if e.error == "invalid_name":

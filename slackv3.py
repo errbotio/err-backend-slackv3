@@ -363,8 +363,8 @@ class SlackBackend(ErrBot):
                 return event_handler(self.slack_web, event)
             except AttributeError:
                 log.debug(f"Event type {event_type} not supported.")
-        except AttributeError:
-            log.warning("Ignoring unsupported Slack event!")
+        except KeyError:
+            log.debug("Ignoring unsupported Slack event!")
 
     def _sm_generic_event_handler(self, client: SocketModeClient, req: SocketModeRequest):
         log.debug(

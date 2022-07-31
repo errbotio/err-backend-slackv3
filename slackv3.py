@@ -44,7 +44,7 @@ except ImportError:
     log.exception("Could not start the SlackV3 backend")
     log.fatal(
         "You need to install python modules in order to use the Slack backend.\n"
-        "You can do `pip install errbot[slack-sdk]` to install them."
+        "You can do `pip install -r requirements.txt` to install them."
     )
     sys.exit(1)
 
@@ -68,7 +68,7 @@ class SlackBackend(ErrBot):
 
         if not self.token:
             log.fatal(
-                'You need to set your token (found under "Bot Integration" on Slack) in '
+                'You need to set your token (found under "OAuth & Permissions" on Slack) in '
                 "the BOT_IDENTITY setting in your configuration.  Without this token I "
                 "cannot connect to Slack."
             )
@@ -354,14 +354,17 @@ class SlackBackend(ErrBot):
     def _generic_wrapper(self, event_data):
         """Calls the event handler based on the event type"""
         log.debug("Received event: {}".format(str(event_data)))
-        event = event_data["event"]
-        event_type = event["type"]
-
         try:
-            event_handler = getattr(self, f"_handle_{event_type}")
-            return event_handler(self.slack_web, event)
-        except AttributeError:
-            log.debug(f"Event type {event_type} not supported.")
+            event = event_data["event"]
+            event_type = event["type"]
+
+            try:
+                event_handler = getattr(self, f"_handle_{event_type}")
+                return event_handler(self.slack_web, event)
+            except AttributeError:
+                log.debug(f"Event type {event_type} not supported.")
+        except KeyError:
+            log.debug("Ignoring unsupported Slack event!")
 
     def _sm_generic_event_handler(self, client: SocketModeClient, req: SocketModeRequest):
         log.debug(
@@ -678,7 +681,7 @@ class SlackBackend(ErrBot):
             try:
                 msg.extras["thread_ts"] = self._ts_for_message(msg.parent)
             except KeyError:
-                # Gives to the user a more interesting explanation if we cannot find a ts from the parent.
+                # Cannot reply to thread without a timestamp from the parent.
                 log.exception(
                     "The provided parent message is not a Slack message "
                     "or does not contain a Slack timestamp."
@@ -964,8 +967,9 @@ class SlackBackend(ErrBot):
             return SlackRoom(webclient=self.slack_web, channelid=channelid, bot=self)
 
         raise Exception(
-            "You found a bug. I expected at least one of userid, channelid, username or channelname "
-            "to be resolved but none of them were. This shouldn't happen so, please file a bug."
+            "You found a bug.  I expected at least one of userid, channelid, username "
+            "or channelname to be resolved but none of them were. This shouldn't "
+            "happen so, please file a bug."
         )
 
     def is_from_self(self, msg: Message) -> bool:
@@ -1047,7 +1051,7 @@ class SlackBackend(ErrBot):
         return "slackv3"
 
     def query_room(self, room):
-        """ Room can either be a name or a channelid """
+        """Room can either be a name or a channelid"""
         if room.startswith("C") or room.startswith("G"):
             return SlackRoom(webclient=self.slack_web, channelid=room, bot=self)
 

@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 ### Changed
 ### Fixed
- - Can not add/remove reaction since slack_web libs changed
+ - Unable to add add/remove reactions.  #66 (@pdkhai)
+ - Exception being raised on unsupported Slack events like modal and other Slack GUI events. #72 (@nzlosh)
+
 ### Removed
 
 ## [0.1.1] 2021-12-09

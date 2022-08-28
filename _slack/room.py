@@ -42,9 +42,14 @@ class SlackRoom(Room):
                 self._name = name[1:]
             else:
                 self._name = name
-            channelid = self._channelname_to_id(name)
 
-        if channelid is not None:
+            # channelid = self._channelname_to_id(name)
+            try:
+                channelid = self._channelname_to_id(name)
+            except RoomDoesNotExistError:
+                pass
+
+        if channelid:
             self._cache_channel_info(channelid)
 
     def __str__(self):
@@ -70,7 +75,7 @@ class SlackRoom(Room):
 
             if res["ok"] is True:
                 for channel in res["channels"]:
-                    if channel["name"] == name:
+                    if "name" in channel and channel["name"] == name:
                         channel_id = channel["id"]
                         break
                 else:
@@ -194,7 +199,10 @@ class SlackRoom(Room):
         """
         Return topic string or None when it's an empty string.
         """
-        return self._cache["topic"] or None
+        topic = None
+        if self._cache:
+            topic = self._cache.get("topic")
+        return topic
 
     @topic.setter
     def topic(self, topic):

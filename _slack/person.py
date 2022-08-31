@@ -85,23 +85,33 @@ class SlackPerson(Person):
         if self._userid is None:
             raise ValueError("Unable to look up an undefined user id.")
 
-        res = self._webclient.users_info(user=self._userid)
+        isbot = False
+        if self._userid[0] == "B":
+            isbot = True
+        
+        if not isbot:
+            res = self._webclient.users_info(user=self._userid)
+        else:
+            res = self._webclient.bots_info(bot=self._userid)
 
         if res["ok"] is False:
             log.error(
                 f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
             )
         else:
-            for attribute in ["real_name", "display_name", "email"]:
-                self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
-
-            team_res = self._webclient.team_info(team=res["user"]["team_id"])
-            if team_res["ok"]:
-                self._user_info["domain"] = team_res["team"]["domain"]
+            if isbot:                
+                self._user_info["display_name"] = res["bot"].get("name", "")
             else:
-                log.warning(
-                    f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
-                )
+                for attribute in ["real_name", "display_name", "email"]:
+                    self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+
+                team_res = self._webclient.team_info(team=res["user"]["team_id"])
+                if team_res["ok"]:
+                    self._user_info["domain"] = team_res["team"]["domain"]
+                else:
+                    log.warning(
+                        f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
+                    )
 
     @property
     def channelid(self):

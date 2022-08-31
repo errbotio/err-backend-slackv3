@@ -88,7 +88,11 @@ class SlackPerson(Person):
         isbot = False
         if self._userid[0] == "B":
             isbot = True
-        
+
+        # Fix error while looking up shorter bot uid
+        if len(self._userid) <= 3:
+            return
+
         if not isbot:
             res = self._webclient.users_info(user=self._userid)
         else:
@@ -99,7 +103,7 @@ class SlackPerson(Person):
                 f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
             )
         else:
-            if isbot:                
+            if isbot:
                 self._user_info["display_name"] = res["bot"].get("name", "")
             else:
                 for attribute in ["real_name", "display_name", "email"]:

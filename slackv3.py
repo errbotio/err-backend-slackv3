@@ -673,15 +673,6 @@ class SlackBackend(ErrBot):
                 to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
     
-    def update_message(self, msg):
-        if "ts" not in msg.extras or len(msg.extras["ts"]) <= 0:
-            # If a timestamp wasn't provided, log an error and return the original message
-            log.error(
-                f'No timestamp provided to update message "{msg.body}"'
-            )
-            return msg
-        return self.send_message(msg)
-
     def send_message(self, msg):
         super().send_message(msg)
 
@@ -721,6 +712,7 @@ class SlackBackend(ErrBot):
             log.debug(f"Message size: {len(body)}.")
 
             parts = self.prepare_message_body(body, self.message_size_limit)
+            current_ts_length = len(msg.extras["ts"])
 
             timestamps = []
             for index, part in enumerate(parts):
@@ -737,7 +729,7 @@ class SlackBackend(ErrBot):
                     data["thread_ts"] = msg.extras["thread_ts"]
                     
                     
-                if "ts" in msg.extras and len(msg.extras["ts"]) > index:
+                if "ts" in msg.extras and current_ts_length > index:
                     # If a timestamp exists for the current chunk, update it - otherwise, send it as new
                     data["ts"] = msg.extras["ts"][index]
                     result = self.slack_web.chat_update(**data)
@@ -752,6 +744,18 @@ class SlackBackend(ErrBot):
                     result = self.slack_web.chat_postMessage(**data)
                 timestamps.append(result["ts"])
 
+            if "ts" in msg.extras and current_ts_length > len(parts):
+                # If we have more timestamps than msg parts, delete the remaining timestamps
+                for timestamp in msg.extras["ts"][len(parts) - current_ts_length - 1]:
+                    data = {
+                        "channel": to_channel_id,
+                        "ts": timestamp,
+                        "unfurl_media": "true",
+                        "link_names": "1",
+                        "as_user": "true",
+                    }
+                    self.slack_web.chat_delete(**data)
+
             msg.extras["ts"] = timestamps
         except Exception:
             log.exception(
@@ -760,6 +764,15 @@ class SlackBackend(ErrBot):
             )
             
         return msg
+
+    def update_message(self, msg):
+        if "ts" not in msg.extras or len(msg.extras["ts"]) <= 0:
+            # If a timestamp wasn't provided, log an error and return the original message
+            log.error(
+                f'No timestamp provided to update message "{msg.body}"'
+            )
+            return msg
+        return self.send_message(msg)
 
     def _slack_upload(self, stream: Stream) -> None:
         """

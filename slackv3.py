@@ -672,6 +672,15 @@ class SlackBackend(ErrBot):
                 log.debug("This is a divert to private message, sending it directly to the user.")
                 to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
+    
+    def update_message(self, msg):
+        if "ts" not in msg.extras or len(msg.extras["ts"]) <= 0:
+            # If a timestamp wasn't provided, log an error and return the original message
+            log.error(
+                f'No timestamp provided to update message "{msg.body}"'
+            )
+            return msg
+        return self.send_message(msg)
 
     def send_message(self, msg):
         super().send_message(msg)
@@ -714,7 +723,7 @@ class SlackBackend(ErrBot):
             parts = self.prepare_message_body(body, self.message_size_limit)
 
             timestamps = []
-            for part in parts:
+            for index, part in enumerate(parts):
                 data = {
                     "channel": to_channel_id,
                     "text": part,
@@ -726,8 +735,14 @@ class SlackBackend(ErrBot):
                 # Keep the thread_ts to answer to the same thread.
                 if "thread_ts" in msg.extras:
                     data["thread_ts"] = msg.extras["thread_ts"]
+                    
+                    
+                if "ts" in msg.extras and len(msg.extras["ts"]) > index:
+                    # If a timestamp exists for the current chunk, update it - otherwise, send it as new
+                    data["ts"] = msg.extras["ts"][index]
+                    result = self.slack_web.chat_update(**data)
 
-                if msg.extras.get("ephemeral"):
+                elif msg.extras.get("ephemeral"):
                     data["user"] = msg.to.userid
                     # undo divert / room to private
                     if isinstance(msg.to, RoomOccupant):
@@ -743,6 +758,8 @@ class SlackBackend(ErrBot):
                 f"An exception occurred while trying to send the following message "
                 f"to {to_humanreadable}: {msg.body}."
             )
+            
+        return msg
 
     def _slack_upload(self, stream: Stream) -> None:
         """

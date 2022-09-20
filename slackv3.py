@@ -728,7 +728,6 @@ class SlackBackend(ErrBot):
                 if "thread_ts" in msg.extras:
                     data["thread_ts"] = msg.extras["thread_ts"]
                     
-                    
                 if "ts" in msg.extras and current_ts_length > index:
                     # If a timestamp exists for the current chunk, update it - otherwise, send it as new
                     data["ts"] = msg.extras["ts"][index]

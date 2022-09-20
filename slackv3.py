@@ -672,7 +672,7 @@ class SlackBackend(ErrBot):
                 log.debug("This is a divert to private message, sending it directly to the user.")
                 to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
-    
+
     def send_message(self, msg):
         super().send_message(msg)
 

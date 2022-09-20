@@ -826,6 +826,17 @@ class SlackBackend(ErrBot):
                 "link_names": "1",
                 "as_user": "true",
             }
+
+            if card.parent is not None:
+                # we are asked to reply to a specific thread.
+                try:
+                    data["thread_ts"] = self._ts_for_message(card.parent)
+                except KeyError:
+                    # Cannot reply to thread without a timestamp from the parent.
+                    log.exception(
+                        "The provided parent message is not a Slack message "
+                        "or does not contain a Slack timestamp."
+                    )
             try:
                 log.debug(f"Sending data:\n{data}")
                 self.slack_web.chat_postMessage(**data)

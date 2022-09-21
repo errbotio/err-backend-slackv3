@@ -4,12 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] Unreleased
+## [0.3.0] Unreleased
 ### Added
 ### Changed
 ### Fixed
- - Unable to add add/remove reactions.  #66 (@pdkhai)
+
+## [0.2.0] 2022-09-22
+### Added
+ -  Ability to update slack messages. #75 (@TheJokersThief)
+ -  Send cards to threads, when asked. #76 + #79 (@TheJokersThief + @duhow)
+### Changed
+### Fixed
+ - Unable to add add/remove reactions. #66 (@pdkhai)
  - Exception being raised on unsupported Slack events like modal and other Slack GUI events. #72 (@nzlosh)
+ - Getting topic for non-existent channel. #73 (@sijis)
+ - Bot id lookup for Bot accounts and Slack bot messages #74 (@jcfrt)
 
 ### Removed
 

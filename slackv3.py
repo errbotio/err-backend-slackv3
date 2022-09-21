@@ -712,7 +712,7 @@ class SlackBackend(ErrBot):
             log.debug(f"Message size: {len(body)}.")
 
             parts = self.prepare_message_body(body, self.message_size_limit)
-            current_ts_length = len(msg.extras["ts"])
+            current_ts_length = len(msg.extras.get("ts", ""))
 
             timestamps = []
             for index, part in enumerate(parts):

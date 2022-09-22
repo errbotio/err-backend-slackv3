@@ -766,7 +766,7 @@ class SlackBackend(ErrBot):
             
         return msg
 
-    def update_message(self, msg):
+    def update_message(self, msg) -> Message:
         if "ts" not in msg.extras or len(msg.extras["ts"]) <= 0:
             # If a timestamp wasn't provided, log an error and return the original message
             log.error(

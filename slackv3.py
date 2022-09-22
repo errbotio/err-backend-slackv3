@@ -741,7 +741,9 @@ class SlackBackend(ErrBot):
                     result = self.slack_web.chat_postEphemeral(**data)
                 else:
                     result = self.slack_web.chat_postMessage(**data)
-                timestamps.append(result["ts"])
+
+                if "ts" in result:
+                    timestamps.append(result["ts"])
 
             if "ts" in msg.extras and current_ts_length > len(parts):
                 # If we have more timestamps than msg parts, delete the remaining timestamps

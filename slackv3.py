@@ -673,7 +673,7 @@ class SlackBackend(ErrBot):
                 to_channel_id = self.get_im_channel(msg.to.userid)
         return to_humanreadable, to_channel_id
 
-    def send_message(self, msg):
+    def send_message(self, msg) -> Message:
         super().send_message(msg)
 
         if msg.parent is not None:

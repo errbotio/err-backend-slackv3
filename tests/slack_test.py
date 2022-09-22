@@ -220,6 +220,30 @@ SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE = json.loads(
     """
 )
 
+EXAMPLE_UPDATE_MESSAGE = Message(
+    body="Here's a message for you",
+    to=MOCKED_PERSON,
+    extras={
+        'ts': ['1401383885.000061'],
+    }
+)
+
+# https://api.slack.com/methods/chat.postEphemeral#examples
+SUCCESSFUL_UPDATE_MESSAGE_RESPONSE = json.loads(
+    """
+{
+    "ok": true,
+    "channel": "C024BE91L",
+    "ts": "1502210682.580145",
+    "text": "Updated text you carefully authored",
+    "message": {
+        "text": "Updated text you carefully authored",
+        "user": "U34567890"
+    }
+}
+    """
+)
+
 
 class SlackTests(unittest.TestCase):
     def setUp(self):
@@ -523,3 +547,17 @@ class SlackTests(unittest.TestCase):
 
         # Ephemeral messages can't be updated, so should have no timestamps
         self.assertEqual(resp.extras['ts'], [])
+
+    def test_update_message(self):
+        self.slack.slack_web = MagicMock()
+        self.slack.slack_web.chat_update.return_value = SUCCESSFUL_UPDATE_MESSAGE_RESPONSE
+
+        # Mock an empty plugin manager (we're not testing plugins here)
+        mocked_plugin_manager = MagicMock()
+        mocked_plugin_manager.get_all_active_plugins.return_value = []
+        self.slack.attach_plugin_manager(mocked_plugin_manager)
+        
+        resp = self.slack.update_message(EXAMPLE_UPDATE_MESSAGE)
+
+        self.assertEqual(resp.body, EXAMPLE_UPDATE_MESSAGE.body)
+        self.assertEqual(len(resp.extras['ts']), 1)

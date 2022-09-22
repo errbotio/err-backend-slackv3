@@ -9,6 +9,8 @@ from tempfile import mkdtemp
 from mock import MagicMock
 
 from errbot.bootstrap import bot_config_defaults
+from errbot.backends.base import Message
+from _slack.room import SlackRoom
 
 log = logging.getLogger(__name__)
 
@@ -167,6 +169,55 @@ CONVERSATION_OPEN_OK = json.loads(
     }
 }
 """
+)
+
+MOCKED_PERSON = MagicMock(userid="123456")
+
+EXAMPLE_MESSAGE = Message(
+    body="Here's a message for you",
+    to=MOCKED_PERSON,
+    parent = Message(
+        body="Here's a message for you",
+        to="C012AB3CD",
+    )
+)
+
+# https://api.slack.com/methods/chat.postMessage#examples
+SUCCESSFUL_MESSAGE_RESPONSE = json.loads(
+    """
+{
+    "ok": true,
+    "channel": "C012AB3CD",
+    "ts": "1503435956.000247",
+    "message": {
+        "text": "Here's a message for you",
+        "username": "ecto1",
+        "bot_id": "B123456",
+        "type": "message",
+        "subtype": "bot_message",
+        "ts": "1503435956.000247"
+    }
+}
+    """
+)
+
+
+EXAMPLE_EPHEMERAL_MESSAGE = Message(
+    body="Here's a message for you",
+    to=MOCKED_PERSON,
+    extras={
+        'ephemeral': True,
+    }
+)
+
+# https://api.slack.com/methods/chat.postEphemeral#examples
+SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE = json.loads(
+    """
+{
+    "ok": true,
+    "message_ts": "1502210682.580145"
+}
+    """
 )
 
 
@@ -442,3 +493,33 @@ class SlackTests(unittest.TestCase):
                 ],
             ),
         )
+
+    def test_send_message(self):
+        self.slack.slack_web = MagicMock()
+        self.slack.slack_web.chat_postMessage.return_value = SUCCESSFUL_MESSAGE_RESPONSE
+
+        # Mock an empty plugin manager (we're not testing plugins here)
+        mocked_plugin_manager = MagicMock()
+        mocked_plugin_manager.get_all_active_plugins.return_value = []
+        self.slack.attach_plugin_manager(mocked_plugin_manager)
+
+        resp = self.slack.send_message(EXAMPLE_MESSAGE)
+
+        self.assertEqual(resp.body, EXAMPLE_MESSAGE.body)
+        self.assertEqual(len(resp.extras['ts']), 1)
+
+    def test_send_ephemeral_message(self):
+        self.slack.slack_web = MagicMock()
+        self.slack.slack_web.chat_postEphemeral.return_value = SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE
+
+        # Mock an empty plugin manager (we're not testing plugins here)
+        mocked_plugin_manager = MagicMock()
+        mocked_plugin_manager.get_all_active_plugins.return_value = []
+        self.slack.attach_plugin_manager(mocked_plugin_manager)
+
+        resp = self.slack.send_message(EXAMPLE_EPHEMERAL_MESSAGE)
+
+        self.assertEqual(resp.extras['ephemeral'], True)
+
+        # Ephemeral messages can't be updated, so should have no timestamps
+        self.assertEqual(resp.extras['ts'], [])

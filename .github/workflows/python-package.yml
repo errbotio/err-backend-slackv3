@@ -59,8 +59,3 @@ jobs:
       if: ${{ matrix.python-version == '3.8' }}
       run: |
         tox -e security
-
-    - name: coverage
-      run: |
-        coverage run slackv3.py --pep8
-        coverage report -m --fail-under 24

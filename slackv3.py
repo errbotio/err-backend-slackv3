@@ -44,7 +44,7 @@ except ImportError:
     log.exception("Could not start the SlackV3 backend")
     log.fatal(
         "You need to install python modules in order to use the Slack backend.\n"
-        "You can do `pip install .` to install them."
+        "You can do `pip install errbot-plugin-slackv3` to install them."
     )
     sys.exit(1)
 

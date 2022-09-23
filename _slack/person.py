@@ -103,7 +103,9 @@ class SlackPerson(Person):
                 self._user_info["display_name"] = res["bot"].get("name", "")
             else:
                 for attribute in ["real_name", "display_name", "email"]:
-                    self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+                    self._user_info[attribute] = res["user"]["profile"].get(
+                        attribute, ""
+                    )
 
                 team_res = self._webclient.team_info(team=res["user"]["team_id"])
                 if team_res["ok"]:

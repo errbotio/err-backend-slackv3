@@ -61,7 +61,7 @@ The virtual environment is created in `/opt/errbot/virtualenv` and errbot initia
     git clone https://github.com/errbotio/err-backend-slackv3
     # to get a specific release use `--branch <release-tag>`, e.g. `--branch v0.1.0`
     git clone --depth 1 https://github.com/errbotio/err-backend-slackv3
-    pip install -r /opt/errbot/backend/err-backend-slackv3/requirements.txt
+    pip install .
     ```
 
 5. Configure the slack bot token, signing secret (Events API with Request URLs) and/or app token (Events API with Socket-mode).  Located in `/opt/errbot/config.py`

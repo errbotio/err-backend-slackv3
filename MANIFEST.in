@@ -1,0 +1,2 @@
+recursive-include _slack
+include slackv3.plug slackv3.py requirements.txt

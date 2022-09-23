@@ -1,8 +1,9 @@
+import logging
 import sys
 import unittest
-import pytest
-import logging
 from tempfile import mkdtemp
+
+import pytest
 from mock import MagicMock
 
 from _slack.room import *

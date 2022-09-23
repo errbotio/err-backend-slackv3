@@ -1,15 +1,15 @@
-import logging
-import pdb
-import os
-import sys
 import json
+import logging
+import os
+import pdb
+import sys
 import unittest
 from tempfile import mkdtemp
 
+from errbot.backends.base import Message
+from errbot.bootstrap import bot_config_defaults
 from mock import MagicMock
 
-from errbot.bootstrap import bot_config_defaults
-from errbot.backends.base import Message
 from _slack.room import SlackRoom
 
 log = logging.getLogger(__name__)
@@ -33,7 +33,6 @@ try:
             m.name = user
             m.channelid = "C123456"
             return m
-
 
 except SystemExit:
     log.exception("Can't import backends.slack for testing")
@@ -176,10 +175,10 @@ MOCKED_PERSON = MagicMock(userid="123456")
 EXAMPLE_MESSAGE = Message(
     body="Here's a message for you",
     to=MOCKED_PERSON,
-    parent = Message(
+    parent=Message(
         body="Here's a message for you",
         to="C012AB3CD",
-    )
+    ),
 )
 
 # https://api.slack.com/methods/chat.postMessage#examples
@@ -206,8 +205,8 @@ EXAMPLE_EPHEMERAL_MESSAGE = Message(
     body="Here's a message for you",
     to=MOCKED_PERSON,
     extras={
-        'ephemeral': True,
-    }
+        "ephemeral": True,
+    },
 )
 
 # https://api.slack.com/methods/chat.postEphemeral#examples
@@ -224,8 +223,8 @@ EXAMPLE_UPDATE_MESSAGE = Message(
     body="Here's a message for you",
     to=MOCKED_PERSON,
     extras={
-        'ts': ['1401383885.000061'],
-    }
+        "ts": ["1401383885.000061"],
+    },
 )
 
 # https://api.slack.com/methods/chat.postEphemeral#examples
@@ -400,8 +399,8 @@ class SlackTests(unittest.TestCase):
         # ~ assert build_from("#general").name == "general"
 
         # ~ self.assertEqual(
-            # ~ build_from("#general/spengler"),
-            # ~ slack.SlackRoomOccupant(None, "W012A3CDE", "C012AB3CD", self.slack),
+        # ~ build_from("#general/spengler"),
+        # ~ slack.SlackRoomOccupant(None, "W012A3CDE", "C012AB3CD", self.slack),
         # ~ )
 
     def test_uri_sanitization(self):
@@ -530,11 +529,13 @@ class SlackTests(unittest.TestCase):
         resp = self.slack.send_message(EXAMPLE_MESSAGE)
 
         self.assertEqual(resp.body, EXAMPLE_MESSAGE.body)
-        self.assertEqual(len(resp.extras['ts']), 1)
+        self.assertEqual(len(resp.extras["ts"]), 1)
 
     def test_send_ephemeral_message(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.chat_postEphemeral.return_value = SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE
+        self.slack.slack_web.chat_postEphemeral.return_value = (
+            SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE
+        )
 
         # Mock an empty plugin manager (we're not testing plugins here)
         mocked_plugin_manager = MagicMock()
@@ -543,21 +544,23 @@ class SlackTests(unittest.TestCase):
 
         resp = self.slack.send_message(EXAMPLE_EPHEMERAL_MESSAGE)
 
-        self.assertEqual(resp.extras['ephemeral'], True)
+        self.assertEqual(resp.extras["ephemeral"], True)
 
         # Ephemeral messages can't be updated, so should have no timestamps
-        self.assertEqual(resp.extras['ts'], [])
+        self.assertEqual(resp.extras["ts"], [])
 
     def test_update_message(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.chat_update.return_value = SUCCESSFUL_UPDATE_MESSAGE_RESPONSE
+        self.slack.slack_web.chat_update.return_value = (
+            SUCCESSFUL_UPDATE_MESSAGE_RESPONSE
+        )
 
         # Mock an empty plugin manager (we're not testing plugins here)
         mocked_plugin_manager = MagicMock()
         mocked_plugin_manager.get_all_active_plugins.return_value = []
         self.slack.attach_plugin_manager(mocked_plugin_manager)
-        
+
         resp = self.slack.update_message(EXAMPLE_UPDATE_MESSAGE)
 
         self.assertEqual(resp.body, EXAMPLE_UPDATE_MESSAGE.body)
-        self.assertEqual(len(resp.extras['ts']), 1)
+        self.assertEqual(len(resp.extras["ts"]), 1)

@@ -1,4 +1,12 @@
+import pathlib
+
 from setuptools import find_packages, setup
+
+
+def read(name, encoding="ascii"):
+    filename = pathlib.Path(__file__).absolute().parent / name
+    return open(filename, "r", encoding=encoding).read()
+
 
 REQUIREMENTS = [
     "slack-sdk>=3.12.0",
@@ -15,6 +23,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=REQUIREMENTS,
+    long_description_content_type="text/markdown",
+    long_description=read("README.md"),
     entry_points={
         "errbot.backend_plugins": [
             "slack = slackv3:SlackBackend",

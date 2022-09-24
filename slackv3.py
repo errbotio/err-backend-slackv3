@@ -748,6 +748,10 @@ class SlackBackend(ErrBot):
                     "as_user": "true",
                 }
 
+                if "attachments" in msg.extras and index == len(parts) - 1:
+                    # If attachments provided, and it's the last part of the mssage
+                    data['attachments'] = json.dumps(msg.extras["attachments"])
+
                 # Keep the thread_ts to answer to the same thread.
                 if "thread_ts" in msg.extras:
                     data["thread_ts"] = msg.extras["thread_ts"]

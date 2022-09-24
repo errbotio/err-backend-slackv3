@@ -747,16 +747,16 @@ class SlackBackend(ErrBot):
                     "link_names": "1",
                     "as_user": "true",
                 }
-                
+
                 if index == len(parts) - 1:
                     # Only add attachments/blocks if it's the last message, to avoid duplication
                     if "attachments" in msg.extras:
                         # If attachments are provided, and it's the last part of the mssage
-                        data['attachments'] = json.dumps(msg.extras["attachments"])
+                        data["attachments"] = json.dumps(msg.extras["attachments"])
 
                     if "blocks" in msg.extras:
                         # If blocksare provided, and it's the last part of the mssage
-                        data['blocks'] = json.dumps(msg.extras["blocks"])
+                        data["blocks"] = json.dumps(msg.extras["blocks"])
 
                 # Keep the thread_ts to answer to the same thread.
                 if "thread_ts" in msg.extras:

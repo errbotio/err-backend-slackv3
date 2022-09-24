@@ -16,7 +16,7 @@ REQUIREMENTS = [
 ]
 
 setup(
-    name="errbot-plugin-slackv3",
+    name="errbot-backend-slackv3",
     version="0.2.0",
     description="Errbot SlackV3 backend plugin",
     author="Errbot",

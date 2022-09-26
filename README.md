@@ -1,4 +1,4 @@
-# err-backend-slackv3
+# errbot-backend-slackv3
 
 [![Documentation Status](https://readthedocs.org/projects/err-backend-slackv3/badge/?version=latest)](https://err-backend-slackv3.readthedocs.io/en/latest/?badge=latest)
 

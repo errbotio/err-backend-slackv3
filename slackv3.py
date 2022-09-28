@@ -171,7 +171,7 @@ class SlackBackend(ErrBot):
                 )
 
         self.bot_alt_prefixes = tuple(
-            x.lower() for x in self.bot_config.BOT_ALT_PREFIXES
+            x.lower() for x in converted_prefixes
         )
         log.debug(f"Converted bot_alt_prefixes: {self.bot_config.BOT_ALT_PREFIXES}")
 

@@ -48,15 +48,15 @@ except ImportError:
     )
     sys.exit(1)
 
-from slackv3._slack.lib import (
+from slackv3.lib import (
     COLORS,
     SLACK_CLIENT_CHANNEL_HYPERLINK,
     USER_IS_BOT_HELPTEXT,
     SlackAPIResponseError,
 )
-from slackv3._slack.markdown import slack_markdown_converter
-from slackv3._slack.person import SlackPerson
-from slackv3._slack.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
+from slackv3.markdown import slack_markdown_converter
+from slackv3.person import SlackPerson
+from slackv3.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
 
 
 class SlackBackend(ErrBot):

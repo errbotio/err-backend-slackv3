@@ -170,10 +170,8 @@ class SlackBackend(ErrBot):
                     f'Failed to look up Slack userid for alternate prefix "{prefix}": {str(e)}'
                 )
 
-        self.bot_alt_prefixes = tuple(
-            x.lower() for x in self.bot_config.BOT_ALT_PREFIXES
-        )
-        log.debug(f"Converted bot_alt_prefixes: {self.bot_config.BOT_ALT_PREFIXES}")
+        self.bot_alt_prefixes = tuple(x for x in converted_prefixes)
+        log.debug(f"Converted bot_alt_prefixes: {self.bot_alt_prefixes}")
 
     def _setup_event_callbacks(self):
         # List of events obtained from https://api.slack.com/events

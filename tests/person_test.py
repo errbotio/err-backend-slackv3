@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 from errbot.backends.base import RoomDoesNotExistError
 from mock import MagicMock
 
-from _slack.person import *
+from slackv3.person import *
 
 log = logging.getLogger(__name__)
 

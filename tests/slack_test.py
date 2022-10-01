@@ -10,7 +10,7 @@ from errbot.backends.base import Message
 from errbot.bootstrap import bot_config_defaults
 from mock import MagicMock
 
-from _slack.room import SlackRoom
+from slackv3.room import SlackRoom
 
 log = logging.getLogger(__name__)
 

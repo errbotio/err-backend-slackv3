@@ -6,7 +6,7 @@ from tempfile import mkdtemp
 import pytest
 from mock import MagicMock
 
-from _slack.room import *
+from slackv3.room import *
 
 log = logging.getLogger(__name__)
 

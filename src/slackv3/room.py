@@ -9,8 +9,8 @@ from errbot.backends.base import (
     UserDoesNotExistError,
 )
 
-from _slack.lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
-from _slack.person import SlackPerson
+from .lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
+from .person import SlackPerson
 
 log = logging.getLogger(__name__)
 

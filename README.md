@@ -1,11 +1,17 @@
 # err-backend-slackv3
 
+[![Documentation Status](https://readthedocs.org/projects/err-backend-slackv3/badge/?version=latest)](https://err-backend-slackv3.readthedocs.io/en/latest/?badge=latest)
+
 Slack Events and Real Time Messaging backend for Errbot.
 
-## Installation and Configuration
+## Documentation
 
-See the (official installation and configuration documentation)[https://errbot.readthedocs.io/en/latest/user_guide/configuration/slackv3.html] for details.
+See the (slackv3 documentation)[https://err-backend-slackv3.readthedocs.io/en/latest/] for:
+ - Installation
+ - Configuraiton
+ - User guide
+ - Developer guide
 
-## Plugin developers
+## Support
 
-See the (official plugin developer documentation)[https://errbot.readthedocs.io/en/latest/user_guide/plugin_development/backend_specifics.html] for a description of backend specific development features.
+If you need help for an `err-backend-slackv3` problem, open an issue at (github repository)[https://github.com/errbotio/err-backend-slackv3]

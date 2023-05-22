@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 
 
 class SlackPersonTests(unittest.TestCase):
-
     USER_INFO_OK = json.loads(
         """
         {

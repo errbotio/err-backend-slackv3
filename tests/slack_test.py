@@ -468,7 +468,6 @@ class SlackTests(unittest.TestCase):
         )
 
     def test_mention_processing(self):
-
         self.slack.slack_web.conversations_info.return_value = (
             CHANNEL_INFO_DIRECT_1TO1_OK
         )

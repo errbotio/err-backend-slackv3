@@ -107,13 +107,28 @@ class SlackPerson(Person):
                         attribute, ""
                     )
 
-                team_res = self._webclient.team_info(team=res["user"]["team_id"])
-                if team_res["ok"]:
-                    self._user_info["domain"] = team_res["team"]["domain"]
+                team = None
+                # Normal users
+                if res.get("user").get("team_id"):
+                    team = res["user"]["team_id"]
+
+                # Users in a ORG/grid setup do not have a team ID
+                elif res.get("user").get("enterprise_user"):
+                    team = res.get("user").get("enterprise_user").get("enterprise_id")
+
                 else:
                     log.warning(
-                        f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
+                        f"Failed to find team_id or enterprise_user details for userid {self._userid}."
                     )
+
+                if team:
+                    team_res = self._webclient.team_info(team=team)
+                    if team_res["ok"]:
+                        self._user_info["domain"] = team_res["team"]["domain"]
+                    else:
+                        log.warning(
+                            f"Failed to fetch team information for userid {self._userid}. Slack error {team_res['ok']}"
+                        )
 
     @property
     def channelid(self):

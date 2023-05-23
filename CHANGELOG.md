@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.3.0] Unreleased
 ### Added
 ### Changed
+ - refactored user cache to allow organisation level users/bots #95 (@gdelaney)
 ### Fixed
 
 ## [0.2.1] 2022-10-02

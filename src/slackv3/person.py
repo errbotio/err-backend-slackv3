@@ -116,6 +116,11 @@ class SlackPerson(Person):
                 elif res.get("user").get("enterprise_user"):
                     team = res.get("user").get("enterprise_user").get("enterprise_id")
 
+                else:
+                    log.warning(
+                        f"Failed to find team_id or enterprise_user details for userid {self._userid}."
+                    )
+
                 if team:
                     team_res = self._webclient.team_info(team=team)
                     if team_res["ok"]:

@@ -142,7 +142,7 @@ class SlackRoom(Room):
             join_failure = False
         except SlackApiError as e:
             log.error(f"Unable to join '{self.name}'. Slack API Error {str(e)}")
-        except BotUserAccessError as e:
+        except BotUserAccessError:
             log.error(f"OAuthv1 bot token not allowed to join channels. '{self.name}'.")
 
         if join_failure:

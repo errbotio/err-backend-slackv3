@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
  - refactored user cache to allow organisation level users/bots #95 (@gdelaney)
 ### Fixed
+ - setting SlackRoom purpose. (@jcfrt)
 
 ## [0.2.1] 2022-10-02
 ### Added

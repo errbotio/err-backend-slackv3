@@ -142,7 +142,7 @@ class SlackRoom(Room):
             join_failure = False
         except SlackApiError as e:
             log.error(f"Unable to join '{self.name}'. Slack API Error {str(e)}")
-        except BotUserAccessError as e:
+        except BotUserAccessError:
             log.error(f"OAuthv1 bot token not allowed to join channels. '{self.name}'.")
 
         if join_failure:
@@ -221,8 +221,8 @@ class SlackRoom(Room):
 
     @purpose.setter
     def purpose(self, purpose):
-        log.info(f"Setting purpose of {self} ({self.id}) to {topic}.")
-        res = self._webclient.conversations_setPurpose(channel=self.id, purpose=purpse)
+        log.info(f"Setting purpose of {self} ({self.id}) to {purpose}.")
+        res = self._webclient.conversations_setPurpose(channel=self.id, purpose=purpose)
         if res["ok"] is True:
             self._cache["purpose"] = purpose
         else:

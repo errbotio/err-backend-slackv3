@@ -4,10 +4,7 @@ Users Guide
 Errbot uses external libraries for most backends, which may offer additional
 functionality not exposed by Errbot in a generic, backend-agnostic fashion.
 
-It is possible to access the underlying client used by the backend you are
-using in order to provide functionality that isn't otherwise available.
-Additionally, interacting directly with the bot internals gives you the freedom
-to control Errbot in highly specific ways that may not be officially supported.
+It is possible to access the underlying client used by the backend in order to provide functionality that isn't otherwise available from errbot's framework. Additionally, interacting directly with the bot internals gives you the freedom to control Errbot in highly specific ways that may not be officially supported.
 
 .. warning::
 
@@ -151,3 +148,59 @@ The below example shows how to send attachments (deprecated) or blocks for advan
             ).to_dict()
         ]
         self._bot.send_message(msg)
+
+
+Bot online status indicator
+------------------------------------------------------------------------
+
+The online stuats indicator is an option in slack when you configure the bot and assign the oauth roles.
+
+
+
+Bot manifest
+------------------------------------------------------------------------
+
+Slack allows configuration of bot oauth and other parameters through a manifest file.
+An example below is provided to demonstrate what information can be supplied.
+
+display_information:
+  name: Your Bot Name
+  description: Description
+  background_color: "#000000"
+features:
+  bot_user:
+    display_name: Your Bot Name
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - channels:history
+      - channels:read
+      - chat:write
+      - groups:history
+      - groups:read
+      - groups:write
+      - im:history
+      - im:read
+      - im:write
+      - mpim:read
+      - mpim:write
+      - reactions:read
+      - team:read
+      - users:read
+      - users:read.email
+      - channels:manage
+settings:
+  event_subscriptions:
+    bot_events:
+      - message.channels
+      - message.groups
+      - message.im
+      - reaction_added
+  interactivity:
+    is_enabled: true
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false
+
+It may also be necessary to enable _users being able to send message_ checkbox and create an app-level token with `connections:write` access

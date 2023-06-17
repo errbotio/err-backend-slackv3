@@ -4,7 +4,7 @@ Users Guide
 Errbot uses external libraries for most backends, which may offer additional
 functionality not exposed by Errbot in a generic, backend-agnostic fashion.
 
-It is possible to access the underlying client used by the backend in order to provide functionality that isn't otherwise available from errbot's framework. Additionally, interacting directly with the bot internals gives you the freedom to control Errbot in highly specific ways that may not be officially supported.
+It is possible to access the underlying client used by the backend in order to provide functionality that isn't otherwise available from errbot's framework.  Additionally, interacting directly with the bot internals gives you the freedom to control Errbot in highly specific ways that may not be officially supported.
 
 .. warning::
 

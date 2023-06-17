@@ -1,5 +1,5 @@
 
-.. title:: err-stackstorm's documentation
+.. title:: err-backend-slackv3 documentation
 
 Errbot Slackv3 Backend Documentation
 ========================================================================

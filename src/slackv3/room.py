@@ -163,9 +163,7 @@ class SlackRoom(Room):
         try:
             if private:
                 log.info(f"Creating private conversation {self}.")
-                self._bot.slack_web.conversations_create(
-                    name=self.name, is_private=True
-                )
+                self._bot.slack_web.conversations_create(name=self.name, is_private=True)
             else:
                 log.info(f"Creating conversation {self}.")
                 self._bot.slack_web.conversations_create(name=self.name)
@@ -240,9 +238,7 @@ class SlackRoom(Room):
             )
             if res["ok"] is True:
                 for member in res["members"]:
-                    occupants.append(
-                        SlackRoomOccupant(self._webclient, member, self.id, self._bot)
-                    )
+                    occupants.append(SlackRoomOccupant(self._webclient, member, self.id, self._bot))
                 cursor = res["response_metadata"]["next_cursor"]
             else:
                 log.exception(
@@ -253,8 +249,7 @@ class SlackRoom(Room):
 
     def invite(self, *args):
         users = {
-            user["name"]: user["id"]
-            for user in self._webclient.api_call("users.list")["members"]
+            user["name"]: user["id"] for user in self._webclient.api_call("users.list")["members"]
         }
 
         for user in args:

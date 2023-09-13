@@ -353,9 +353,7 @@ class SlackTests(unittest.TestCase):
 
         self.assertEqual(extract_from("@person"), ("person", None, None, None))
 
-        self.assertEqual(
-            extract_from("#general/someuser"), ("someuser", None, "general", None)
-        )
+        self.assertEqual(extract_from("#general/someuser"), ("someuser", None, "general", None))
 
         self.assertEqual(extract_from("#general"), (None, None, "general", None))
 
@@ -379,9 +377,7 @@ class SlackTests(unittest.TestCase):
 
     def test_build_identifier(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.conversations_info.return_value = (
-            CONVERSATION_INFO_PUBLIC_OK
-        )
+        self.slack.slack_web.conversations_info.return_value = CONVERSATION_INFO_PUBLIC_OK
         self.slack.slack_web.users_info.return_value = USER_INFO_OK
         self.slack.slack_web.conversations_open.return_value = CONVERSATION_OPEN_OK
 
@@ -412,9 +408,7 @@ class SlackTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            sanitize(
-                "Pretty URL Testing: <http://example.org|example.org> with " "more text"
-            ),
+            sanitize("Pretty URL Testing: <http://example.org|example.org> with " "more text"),
             "Pretty URL Testing: example.org with more text",
         )
 
@@ -468,12 +462,8 @@ class SlackTests(unittest.TestCase):
         )
 
     def test_mention_processing(self):
-        self.slack.slack_web.conversations_info.return_value = (
-            CHANNEL_INFO_DIRECT_1TO1_OK
-        )
-        self.slack.slack_web.conversations_open.return_value = (
-            CHANNEL_INFO_DIRECT_1TO1_OK
-        )
+        self.slack.slack_web.conversations_info.return_value = CHANNEL_INFO_DIRECT_1TO1_OK
+        self.slack.slack_web.conversations_open.return_value = CHANNEL_INFO_DIRECT_1TO1_OK
 
         mentions = self.slack.process_mentions
 
@@ -532,9 +522,7 @@ class SlackTests(unittest.TestCase):
 
     def test_send_ephemeral_message(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.chat_postEphemeral.return_value = (
-            SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE
-        )
+        self.slack.slack_web.chat_postEphemeral.return_value = SUCCESSFUL_EPHEMERAL_MESSAGE_RESPONSE
 
         # Mock an empty plugin manager (we're not testing plugins here)
         mocked_plugin_manager = MagicMock()
@@ -550,9 +538,7 @@ class SlackTests(unittest.TestCase):
 
     def test_update_message(self):
         self.slack.slack_web = MagicMock()
-        self.slack.slack_web.chat_update.return_value = (
-            SUCCESSFUL_UPDATE_MESSAGE_RESPONSE
-        )
+        self.slack.slack_web.chat_update.return_value = SUCCESSFUL_UPDATE_MESSAGE_RESPONSE
 
         # Mock an empty plugin manager (we're not testing plugins here)
         mocked_plugin_manager = MagicMock()

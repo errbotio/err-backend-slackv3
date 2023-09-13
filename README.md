@@ -15,3 +15,4 @@ See the (slackv3 documentation)[https://err-backend-slackv3.readthedocs.io/en/la
 ## Support
 
 If you need help for an `err-backend-slackv3` problem, open an issue at (github repository)[https://github.com/errbotio/err-backend-slackv3]
+

@@ -23,6 +23,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
  - Ensure ephemeral messages return a ts attribute. #81 (@TheJokersThief)
 
+## [0.2.1] 2022-10-02
+### Added
+ - Send cards to threads, when requested. #76 (@TheJokersThief)
+ - Ability to update slack messages. #75 (@TheJokersThief)
+ - Allow supplying raw attachments/blocks for messages. #83 (@TheJokersThief)
+
+### Changed
+ - refactored repository for setting it up as a pypi package. #82, #89 (@sijis)
+
+### Fixed
+ - Ensure ephemeral messages return a ts attribute. #81 (@TheJokersThief)
+
+## [0.2.1] 2022-10-02
+### Added
+ - Send cards to threads, when requested. #76 (@TheJokersThief)
+ - Ability to update slack messages. #75 (@TheJokersThief)
+ - Allow supplying raw attachments/blocks for messages. #83 (@TheJokersThief)
+
+### Changed
+ - refactored repository for setting it up as a pypi package. #82, #89 (@sijis)
+
+### Fixed
+ - Ensure ephemeral messages return a ts attribute. #81 (@TheJokersThief)
+
 ## [0.2.0] 2022-09-22
 ### Added
  -  Ability to update slack messages. #75 (@TheJokersThief)

@@ -187,7 +187,7 @@ Slack allows configuration of bot oauth and other parameters through a manifest 
       socket_mode_enabled: true
       token_rotation_enabled: false
 
-It may also be necessary to enable _users being able to send message_ checkbox and create an app-level token with `connections:write` access.
+It may also be necessary to enable *users being able to send message* checkbox and create an app-level token with `connections:write` access.
 
 
 Bot Admins

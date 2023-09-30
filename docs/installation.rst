@@ -146,6 +146,7 @@ Bot manifest
 Slack allows configuration of bot oauth and other parameters through a manifest file.  An example below is provided to demonstrate what information can be supplied.
 
 ::
+
     display_information:
       name: Your Bot Name
       description: Description

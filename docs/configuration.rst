@@ -121,7 +121,7 @@ Ensure the bot is also subscribed to the following events:
 
 Bot Admins
 ------------------------------------------------------------------------
-Slack changed the way users are uniquely identified from display name ``@some_name`` to user id ``Uxxxxxx``. Errbot configuration will need to be updated before administrators can be correctly identified aginst the ACL sets.
+Slack changed the way users are uniquely identified from display name ``@some_name`` to user id ``Uxxxxxx``. Errbot configuration will need to be updated before administrators can be correctly identified against the ACL sets.
 
 The UserID is in plain text format. It can be found in the the Slack full profile page or using the ``!whoami`` command (``person`` field).
 

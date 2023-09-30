@@ -1,10 +1,6 @@
 Installation
 ========================================================================
 
-
-
-
-
 Dependencies
 ------------------------------------------------------------------------
 
@@ -15,6 +11,7 @@ installed in a python virtual environment (adjust the command to your errbot's i
     git clone https://github.com/errbotio/err-backend-slackv3.git
     source /opt/errbot/bin/activate
     /opt/errbot/bin/pip install .
+
 
 Connection Methods
 ------------------------------------------------------------------------
@@ -105,6 +102,24 @@ Legacy token with RTM
 This was the original method for connecting a bot to Slack.  Create a bot token, configure errbot with it and start using Slack.
 Pay attention when reading `real time messaging <https://github.com/slackapi/python-slack-sdk/blob/main/docs-src/real_time_messaging.rst>`_ explaining how to create a "classic slack application".  Slack does not allow Legacy bot tokens to use the Events API.
 
+.. Note::
+   Community members have shared the following steps to create a legacy token.
+   It is documented here for convenience with no guarantee the steps will work, you will need to refer to official Slack documentation if they fail.
+   Keep in mind Slacks intention is to deprecate the RTM protocol in favour of the Event protocol.
+
+To create a classic app for Errbot.
+
+1. Go to https://api.slack.com/apps?new_classic_app=1 and create a classic app
+2. Go to OAuth & Permissions in the left pane
+3. Add bot scope in the Scopes section
+4. You'll see a warning saying "This scope is deprecated. Please update scopes to use granular permissions." but don't upgrade to the newer permission model
+5. Go to App Home in the left pane
+6. Click Add Legacy Bot User and set its name
+7. Go to Install App in the left pane
+8. Run the OAuth flow with your development workspace
+9. Use Bot User OAuth Access Token for your RTM app
+
+
 Current token with Events Request URLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -125,9 +140,58 @@ Ensure the bot is also subscribed to the following events:
 - `message.groups`
 - `message.im`
 
+Bot manifest
+------------------------------------------------------------------------
+
+Slack allows configuration of bot oauth and other parameters through a manifest file.  An example below is provided to demonstrate what information can be supplied.
+
+::
+    display_information:
+      name: Your Bot Name
+      description: Description
+      background_color: "#000000"
+    features:
+      bot_user:
+        display_name: Your Bot Name
+        always_online: true
+    oauth_config:
+      scopes:
+        bot:
+          - channels:history
+          - channels:read
+          - chat:write
+          - groups:history
+          - groups:read
+          - groups:write
+          - im:history
+          - im:read
+          - im:write
+          - mpim:read
+          - mpim:write
+          - reactions:read
+          - team:read
+          - users:read
+          - users:read.email
+          - channels:manage
+    settings:
+      event_subscriptions:
+        bot_events:
+          - message.channels
+          - message.groups
+          - message.im
+          - reaction_added
+      interactivity:
+        is_enabled: true
+      org_deploy_enabled: false
+      socket_mode_enabled: true
+      token_rotation_enabled: false
+
+It may also be necessary to enable _users being able to send message_ checkbox and create an app-level token with `connections:write` access.
+
+
 Bot Admins
 ------------------------------------------------------------------------
-Slack changed the way users are uniquely identified from display name ``@some_name`` to user id ``Uxxxxxx``. Errbot configuration will need to be updated before administrators can be correctly identified aginst the ACL sets.
+Slack changed the way users are uniquely identified from display name ``@some_name`` to user id ``Uxxxxxx``. Errbot configuration will need to be updated before administrators can be correctly identified against the ACL sets.
 
 The UserID is in plain text format. It can be found in the the Slack full profile page or using the ``!whoami`` command (``person`` field).
 

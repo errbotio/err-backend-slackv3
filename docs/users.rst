@@ -6,7 +6,7 @@ Users Guide
     Slack provides advanced features above and beyond simple text messaging in the form of Slack Applications and Workflows.  These features cross into the domain of application development and use
     specialised events and data structures.  Support for these features is asked for by plugin developers, and for good reasons as their ChatOps requirements grow.  It is at this level of sophistication
     that errbot's framework reaches its limits because errbot's design goal is to be backend agnostic to ensure portability between all chat service providers.  For advanced use cases
-    as mentioned early, it is strongly recommended to use (Slack's Bolt Application Framework)[https://slack.dev/bolt-python/concepts] to write complex application/workflows in Slack.  If you wish to
+    as mentioned early, it is strongly recommended to use `Slack's Bolt Application Framework <https://slack.dev/bolt-python/concepts>`_ to write complex application/workflows in Slack.  If you wish to
     continue using errbot with advanced features, check the developers section of the documentation which explains how to access the underlying Slack Python modules.
 
 The Slack v3 backend provides some advanced formatting through direct access to the underlying python module functionality.  Below are examples of how to make use of Slack specific features.

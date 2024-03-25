@@ -105,11 +105,9 @@ class SlackPerson(Person):
                 # Normal users
                 if res.get("user").get("team_id"):
                     team = res["user"]["team_id"]
-
                 # Users in a ORG/grid setup do not have a team ID
-                elif res.get("user").get("enterprise_user"):
-                    team = res.get("user").get("enterprise_user").get("enterprise_id")
-
+                elif res.get("user", {}).get("enterprise_user"):
+                    team = res["user"]["enterprise_user"].get("enterprise_id")
                 else:
                     log.warning(
                         f"Failed to find team_id or enterprise_user details for userid {self._userid}."
@@ -134,7 +132,7 @@ class SlackPerson(Person):
         Convert a Slack channel ID to its channel name
         """
         channel_name_key = "name"
-        if self._channel_info["is_im"] is True:
+        if self._channel_info.get("is_im") is True:
             channel_name_key = "user"
 
         return self._channel_info[channel_name_key]

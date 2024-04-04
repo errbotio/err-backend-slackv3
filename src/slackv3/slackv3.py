@@ -792,7 +792,7 @@ class SlackBackend(ErrBot):
         try:
             stream.accept()
             resp = self.slack_web.files_upload(
-                channels=stream.identifier.channelid, filename=stream.name, file=stream
+                channels=stream.identifier.id, filename=stream.name, file=stream
             )
             if resp.get("ok"):
                 stream.success()

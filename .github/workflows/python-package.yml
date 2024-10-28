@@ -19,9 +19,9 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v4.2.2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5.2.0
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -41,16 +41,16 @@ jobs:
         tox -e py
 
     - name: Check Distribution
-      if: ${{ matrix.python-version }} == '3.12'
+      if: ${{ matrix.python-version == '3.12' }}
       run: |
         tox -e dist-check
 
     - name: Codestyle
-      if: ${{ matrix.python-version }} == '3.12'
+      if: ${{ matrix.python-version == '3.12' }}
       run: |
         tox -e codestyle
 
     - name: Security
-      if: ${{ matrix.python-version }} == '3.12'
+      if: ${{ matrix.python-version == '3.12' }}
       run: |
         tox -e security

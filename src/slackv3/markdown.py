@@ -5,7 +5,9 @@ from markdown import Markdown
 from markdown.extensions.extra import ExtraExtension
 from markdown.preprocessors import Preprocessor
 
-MARKDOWN_LINK_REGEX = re.compile(r"(?<!!)\[(?P<text>[^\]]+?)\]\((?P<uri>[a-zA-Z0-9]+?:\S+?)\)")
+MARKDOWN_LINK_REGEX = re.compile(
+    r"(?<!!)\[(?P<text>[^\]]+?)\]\((?P<uri>[a-zA-Z0-9]+?:\S+?)\)"
+)
 
 
 def slack_markdown_converter(compact_output=False):
@@ -13,7 +15,9 @@ def slack_markdown_converter(compact_output=False):
     This is a Markdown converter for use with Slack.
     """
     enable_format("imtext", IMTEXT_CHRS, borders=not compact_output)
-    md = Markdown(output_format="imtext", extensions=[ExtraExtension(), AnsiExtension()])
+    md = Markdown(
+        output_format="imtext", extensions=[ExtraExtension(), AnsiExtension()]
+    )
     md.preprocessors.register(LinkPreProcessor(md), "LinkPreProcessor", 30)
     md.stripTopLevelTags = False
     return md

@@ -1,14 +1,11 @@
 import json
 import logging
-import os
-import sys
 import unittest
-from tempfile import mkdtemp
 
 from errbot.backends.base import RoomDoesNotExistError
 from mock import MagicMock
 
-from slackv3.person import *
+from slackv3.person import SlackPerson
 
 log = logging.getLogger(__name__)
 
@@ -229,10 +226,14 @@ class SlackPersonTests(unittest.TestCase):
     def setUp(self):
         self.webclient = MagicMock()
         self.webclient.users_info.return_value = SlackPersonTests.USER_INFO_OK
-        self.webclient.conversations_info.return_value = SlackPersonTests.CHANNEL_INFO_PUBLIC_OK
+        self.webclient.conversations_info.return_value = (
+            SlackPersonTests.CHANNEL_INFO_PUBLIC_OK
+        )
         self.userid = "W012A3CDE"
         self.channelid = "C012AB3CD"
-        self.p = SlackPerson(self.webclient, userid=self.userid, channelid=self.channelid)
+        self.p = SlackPerson(
+            self.webclient, userid=self.userid, channelid=self.channelid
+        )
 
     def test_wrong_userid(self):
         with self.assertRaises(Exception):
@@ -289,8 +290,10 @@ class SlackPersonTests(unittest.TestCase):
         self.webclient.conversations_info.assert_called_once_with(channel="C012AB3CD")
 
     def test_channelname_channel_not_found(self):
-        self.webclient.conversations_info.return_value = SlackPersonTests.CHANNEL_INFO_FAIL
-        with self.assertRaises(RoomDoesNotExistError) as e:
+        self.webclient.conversations_info.return_value = (
+            SlackPersonTests.CHANNEL_INFO_FAIL
+        )
+        with self.assertRaises(RoomDoesNotExistError):
             self.p = SlackPerson(self.webclient, channelid="C012AB3CD")
             self.p.channelname
 
@@ -318,7 +321,9 @@ class SlackPersonTests(unittest.TestCase):
         self.assertEqual(str(self.p), "<@W012A3CDE>")
 
     def test_equal(self):
-        self.another_p = SlackPerson(self.webclient, userid=self.userid, channelid=self.channelid)
+        self.another_p = SlackPerson(
+            self.webclient, userid=self.userid, channelid=self.channelid
+        )
         self.assertTrue(self.p == self.another_p)
         self.assertFalse(self.p == "this is not a person")
 

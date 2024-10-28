@@ -30,12 +30,14 @@ class SlackPerson(Person):
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
         if userid is not None and userid[0] not in ("U", "W", "B"):
             raise Exception(
-                f"This is not a Slack user or bot id: {userid} " "(should start with B, U or W)"
+                f"This is not a Slack user or bot id: {userid} "
+                "(should start with B, U or W)"
             )
 
         if channelid is not None and channelid[0] not in ("D", "C", "G"):
             raise Exception(
-                f"This is not a valid Slack channelid: {channelid} " "(should start with D, C or G)"
+                f"This is not a valid Slack channelid: {channelid} "
+                "(should start with D, C or G)"
             )
 
         self._userid = userid
@@ -93,13 +95,17 @@ class SlackPerson(Person):
             res = self._webclient.users_info(user=self._userid)
 
         if res["ok"] is False:
-            log.error(f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}")
+            log.error(
+                f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
+            )
         else:
             if "bot" in res:
                 self._user_info["display_name"] = res["bot"].get("name", "")
             else:
                 for attribute in ["real_name", "display_name", "email"]:
-                    self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
+                    self._user_info[attribute] = res["user"]["profile"].get(
+                        attribute, ""
+                    )
 
                 team = None
                 # Normal users

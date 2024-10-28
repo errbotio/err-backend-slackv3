@@ -1,14 +1,11 @@
 import json
 import logging
-import os
-import sys
 import unittest
-from tempfile import mkdtemp
 
 from errbot.backends.base import RoomDoesNotExistError
 from mock import MagicMock
 
-from slackv3.person import *
+from slackv3.person import SlackPerson
 
 log = logging.getLogger(__name__)
 
@@ -296,7 +293,7 @@ class SlackPersonTests(unittest.TestCase):
         self.webclient.conversations_info.return_value = (
             SlackPersonTests.CHANNEL_INFO_FAIL
         )
-        with self.assertRaises(RoomDoesNotExistError) as e:
+        with self.assertRaises(RoomDoesNotExistError):
             self.p = SlackPerson(self.webclient, channelid="C012AB3CD")
             self.p.channelname
 

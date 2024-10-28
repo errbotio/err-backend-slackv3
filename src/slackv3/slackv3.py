@@ -18,9 +18,6 @@ from errbot.backends.base import (
     Message,
     Presence,
     Reaction,
-    Room,
-    RoomDoesNotExistError,
-    RoomError,
     RoomOccupant,
     Stream,
     UserDoesNotExistError,
@@ -30,10 +27,18 @@ from errbot.core import ErrBot
 from errbot.core_plugins import flask_app
 from errbot.utils import split_string_after
 
+from slackv3.lib import (
+    COLORS,
+    SLACK_CLIENT_CHANNEL_HYPERLINK,
+    SlackAPIResponseError,
+)
+from slackv3.markdown import slack_markdown_converter
+from slackv3.person import SlackPerson
+from slackv3.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
+
 log = logging.getLogger(__name__)
 
 try:
-    from slack_sdk.errors import BotUserAccessError, SlackApiError
     from slack_sdk.rtm.v2 import RTMClient
     from slack_sdk.socket_mode import SocketModeClient
     from slack_sdk.socket_mode.request import SocketModeRequest
@@ -47,16 +52,6 @@ except ImportError:
         "You can do `pip install errbot-backend-slackv3` to install them."
     )
     sys.exit(1)
-
-from slackv3.lib import (
-    COLORS,
-    SLACK_CLIENT_CHANNEL_HYPERLINK,
-    USER_IS_BOT_HELPTEXT,
-    SlackAPIResponseError,
-)
-from slackv3.markdown import slack_markdown_converter
-from slackv3.person import SlackPerson
-from slackv3.room import SlackBot, SlackRoom, SlackRoomBot, SlackRoomOccupant
 
 
 class SlackBackend(ErrBot):
@@ -308,7 +303,7 @@ class SlackBackend(ErrBot):
                 try:
                     event_handler = getattr(self, f"_rtm_handle_{event_type}")
                     return event_handler(client, event)
-                except AttributeError as e:
+                except AttributeError:
                     log.debug(f"RTM event type {event_type} not supported.")
 
             log.info("Connecting to Slack RTM API")

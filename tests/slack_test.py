@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import pdb
 import sys
 import unittest
 from tempfile import mkdtemp
@@ -10,7 +9,6 @@ from errbot.backends.base import Message
 from errbot.bootstrap import bot_config_defaults
 from mock import MagicMock
 
-from slackv3.room import SlackRoom
 
 log = logging.getLogger(__name__)
 

@@ -1,12 +1,9 @@
 import logging
-import sys
 import unittest
-from tempfile import mkdtemp
 
 import pytest
-from mock import MagicMock
 
-from slackv3.room import *
+from slackv3.room import SlackRoom
 
 log = logging.getLogger(__name__)
 

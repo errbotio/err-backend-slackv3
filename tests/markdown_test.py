@@ -1,12 +1,7 @@
 import logging
-import os
-import sys
 import unittest
-from tempfile import mkdtemp
 
-from mock import MagicMock
-
-from slackv3.markdown import *
+from slackv3.markdown import slack_markdown_converter
 
 log = logging.getLogger(__name__)
 

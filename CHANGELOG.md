@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
  - setting SlackRoom purpose. (@jcfrt)
  - Fixed channelname raising KeyError: 'is_im'. #103 (@nzlosh)
+ - Convert bot alternative prefix to slack mention id. #87 (@colincoghill)
 
 ## [0.2.1] 2022-10-02
 ### Added

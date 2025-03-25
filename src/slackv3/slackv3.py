@@ -810,8 +810,8 @@ class SlackBackend(ErrBot):
         """
         try:
             stream.accept()
-            resp = self.slack_web.files_upload(
-                channels=stream.identifier.channelid, filename=stream.name, file=stream
+            resp = self.slack_web.files_upload_v2(
+                channel=stream.identifier.channelid, filename=stream.name, file=stream
             )
             if resp.get("ok"):
                 stream.success()

@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.3.0] Unreleased
 ### Added
+
 ### Changed
  - refactored user cache to allow organisation level users/bots #95 (@gdelaney)
+ - switched files_upload api call (end of life) to files_upload_v2 #109 (@bensodenkamp)
+
 ### Fixed
  - setting SlackRoom purpose. (@jcfrt)
  - Fixed channelname raising KeyError: 'is_im'. #103 (@nzlosh)

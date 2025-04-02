@@ -9,7 +9,7 @@ def read(name, encoding="ascii"):
 
 
 REQUIREMENTS = [
-    "slack-sdk>=3.12.0",
+    "slack-sdk>=3.33.5",
     "slackeventsapi>=3.0.0",
     "aiohttp",
     "markdown>=3.3.6",
@@ -17,7 +17,7 @@ REQUIREMENTS = [
 
 setup(
     name="errbot-backend-slackv3",
-    version="0.2.1",
+    version="0.3.0",
     description="Errbot SlackV3 backend plugin",
     author="Errbot",
     packages=find_packages(where="src"),

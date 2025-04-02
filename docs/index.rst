@@ -18,6 +18,7 @@ Real-time Messaging Protocol, Events Request-URL or Events Socket mode.
    configuration.rst
    users.rst
    developers.rst
+   legacy_migration.rst
 
 
 Indices and tables

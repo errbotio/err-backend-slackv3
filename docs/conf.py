@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = "errbot-backend-slackv3"
-copyright = "2019-20223, errbot-backend-slackv3 contributors"
+copyright = "2019-2025, errbot-backend-slackv3 contributors"
 author = "errbot-backend-slackv3 contributors"
 
 # The full version, including alpha/beta/rc tags
-release = "0.2.1"
+release = "0.3.0"
 
 
 # -- General configuration ---------------------------------------------------

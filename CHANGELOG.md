@@ -4,9 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] Unreleased
+## [0.4.0] Unreleased
 ### Added
+### Changed
+### Fixed
 
+## [0.3.0] 2025-04-02
+### Added
+ - Added legacy migration documentation
+
+### Changed
+### Fixed
+
+## [0.3.0] 2025-04-02
+### Added
+ - Added legacy migration documentation
+ 
 ### Changed
  - refactored user cache to allow organisation level users/bots #95 (@gdelaney)
  - switched files_upload api call (end of life) to files_upload_v2 #109 (@bensodenkamp)

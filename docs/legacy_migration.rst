@@ -1,9 +1,9 @@
 Legacy/Classic token migration
 ========================================================================
 
-Slack annonced the `deprecation of legacy bot access <https://api.slack.com/changelog/2024-09-legacy-custom-bots-classic-apps-deprecation>`_  beginning 31st March 2025.  For needing guidance to get their Errbot configuration migrated, here are is the produced used by a community member:
+Slack annonced the `deprecation of legacy bot access <https://api.slack.com/changelog/2024-09-legacy-custom-bots-classic-apps-deprecation>`_  beginning 31st March 2025.  For people needing guidance to get their Errbot configuration migrated, here are is the procedure supplied by a community member.
 
-When migrating from the legacy Slack RTM API to the Events API or Socket Mode, which Errbot's SlackV3 backend uses, the core problem is that the way the bot receives messages has fundamentally changed.
+When migrating from the legacy Slack RTM API to the Events API or Socket Mode, which Errbot's SlackV3 backend supports all three, the core problem is that the way the bot receives messages has fundamentally changed.
 
 Understanding what's changing
 ------------------------------------------------------------------------
@@ -24,7 +24,7 @@ Steps to Migrate
     - In ``config.py`` make sure the correct backend is used.
     ::
 
-    BACKEND = 'SlackV3' # Or check errbot --list-backends for the exact name
+      BACKEND = 'SlackV3' # Or check errbot --list-backends for the exact name
 
     - Configure tokens, the Bot Token (``xoxb-...``).  If using Socket Mode, an App-Level Token is required (``xapp-...``).
     ::
@@ -35,7 +35,7 @@ Steps to Migrate
           'app_token': 'xapp-YOUR-APP-LEVEL-TOKEN-HERE', # Needed for Socket Mode
       }
 
-2. Configure the Slack App (api.slack.com):
+2. Configure the Slack App (api.slack.com)
     - Go to the App's settings page on api.slack.com.
       a. Enable Socket Mode:
         - Navigate to "Settings" -> "Socket Mode".
@@ -62,24 +62,27 @@ Steps to Migrate
             - ``message.im``: To receive direct messages sent to the bot.
             - ``message.mpim``: To receive messages in group direct messages the bot is in.
         - Crucially, without the ``message.*`` events, your bot will not see regular messages like ``!status`` unless they also ``@mention`` the bot.
-    ◦ d. Reinstall App: After changing Scopes or Event Subscriptions, you must reinstall your app into your workspace. Go back to "Settings" -> "Install App" and click "Reinstall to Workspace" (or "Install to Workspace" if it's the first time after changes). Follow the prompts.
-3. Ensure Bot is in the Channel: Double-check that your bot user has actually been invited to and joined the channel where you are typing the ``!status`` command.
-4. Restart Errbot: After updating ``config.py`` and your Slack App settings (including reinstalling), restart your Errbot process.
-5. Check Logs: Increase Errbot's log level in ``config.py`` (``BOT_LOG_LEVEL = logging.DEBUG``) and restart. Check the logs when you send a ``!status`` command. You should see evidence of the message event being received if the subscriptions are correct. If you see the message event but Errbot doesn't react, check your BOT_PREFIX setting in config.py.
+      d. Reinstall App: After changing Scopes or Event Subscriptions, you must reinstall your app into your workspace. Go back to "Settings" -> "Install App" and click "Reinstall to Workspace" (or "Install to Workspace" if it's the first time after changes). Follow the prompts.
 
-Checklist:
+3. Ensure Bot is in the Channel: Double-check that your bot user has actually been invited to and joined the channel where you are typing the ``!status`` command.
+
+4. Restart Errbot: After updating ``config.py`` and your Slack App settings (including reinstalling), restart your Errbot process.
+
+5. Check Logs: Increase Errbot's log level in ``config.py`` (``BOT_LOG_LEVEL = logging.DEBUG``) and restart. Check the logs when you send a ``!status`` command. You should see evidence of the message event being received if the subscriptions are correct. If you see the message event but Errbot doesn't react, check your ``BOT_PREFIX`` setting in ``config.py``.
+
+Checklist
 ------------------------------------------------------------------------
 
     - Use the correct Errbot backend (SlackV3 or similar) in config.py.
     - Provide both ``xoxb-`` (Bot Token) and ``xapp-`` (App-Level Token) in BOT_IDENTITY.
     - Enable Socket Mode in Slack App settings.
-    - Add necessary OAuth Scopes (chat:write, channels:history, groups:history, im:history, mpim:history, etc.).
+    - Add necessary OAuth Scopes (``chat:write``, ``channels:history``, ``groups:history``, ``im:history``, ``mpim:history``, etc.).
     - Subscribe to Bot Events (app_mention, message.channels, message.groups, message.im, message.mpim).
     - Reinstall the Slack App to apply scope/event changes.
     - Ensure the bot user is a member of the relevant channel(s).
     - Restart Errbot.
     - Check logs for errors or received message events.
 
-Following these steps, particularly ensuring the correct Event Subscriptions (message.*) are active and the app is reinstalled, should get your Errbot responding to commands again.
+Following these steps, particularly ensuring the correct Event Subscriptions (``message.*``) are active and the app is reinstalled, should get your Errbot responding to commands again.
 
 Thanks to `grimesp <https://github.com/grimesp>`_ for supplying this migration guide.

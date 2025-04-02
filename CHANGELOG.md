@@ -9,16 +9,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 ### Fixed
 
-## [0.3.0] 2025-04-02
-### Added
- - Added legacy migration documentation
-
+## [0.3.1] 2025-04-02
 ### Changed
 ### Fixed
+ - Fix document generation. (@nzlosh)
 
 ## [0.3.0] 2025-04-02
 ### Added
- - Added legacy migration documentation
+ - Added legacy migration documentation (@nzlosh)
  
 ### Changed
  - refactored user cache to allow organisation level users/bots #95 (@gdelaney)

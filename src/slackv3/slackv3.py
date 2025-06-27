@@ -738,9 +738,10 @@ class SlackBackend(ErrBot):
                 data = {
                     "channel": to_channel_id,
                     "text": part,
-                    "unfurl_media": "true",
-                    "link_names": "1",
-                    "as_user": "true",
+                    "unfurl_links": msg.extras.get('unfurl_links', True),
+                    "unfurl_media": msg.extras.get('unfurl_media', True),
+                    "link_names": msg.extras.get('link_names', True),
+                    "as_user": True,
                 }
 
                 if index == len(parts) - 1:
@@ -780,9 +781,7 @@ class SlackBackend(ErrBot):
                     data = {
                         "channel": to_channel_id,
                         "ts": timestamp,
-                        "unfurl_media": "true",
-                        "link_names": "1",
-                        "as_user": "true",
+                        "as_user": True,
                     }
                     self.slack_web.chat_delete(**data)
 

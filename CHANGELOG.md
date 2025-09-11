@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.4.0] Unreleased
 ### Added
+### Fixed
+### Removed
+
+## [0.3.2] 2025-09-11
+### Added
 ### Changed
  - Update send_message data and allow changing certain things through msg.extras (#112)"
 ### Fixed

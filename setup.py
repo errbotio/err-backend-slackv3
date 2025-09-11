@@ -17,7 +17,7 @@ REQUIREMENTS = [
 
 setup(
     name="errbot-backend-slackv3",
-    version="0.3.1",
+    version="0.3.2",
     description="Errbot SlackV3 backend plugin",
     author="Errbot",
     packages=find_packages(where="src"),

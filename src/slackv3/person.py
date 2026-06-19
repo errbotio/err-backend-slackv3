@@ -29,16 +29,10 @@ class SlackPerson(Person):
 
     def __init__(self, webclient: WebClient, userid=None, channelid=None):
         if userid is not None and userid[0] not in ("U", "W", "B"):
-            raise Exception(
-                f"This is not a Slack user or bot id: {userid} "
-                "(should start with B, U or W)"
-            )
+            raise Exception(f"This is not a Slack user or bot id: {userid} (should start with B, U or W)")
 
         if channelid is not None and channelid[0] not in ("D", "C", "G"):
-            raise Exception(
-                f"This is not a valid Slack channelid: {channelid} "
-                "(should start with D, C or G)"
-            )
+            raise Exception(f"This is not a valid Slack channelid: {channelid} (should start with D, C or G)")
 
         self._userid = userid
         self._user_info = {}
@@ -95,17 +89,13 @@ class SlackPerson(Person):
             res = self._webclient.users_info(user=self._userid)
 
         if res["ok"] is False:
-            log.error(
-                f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}"
-            )
+            log.error(f"Cannot find user with ID {self._userid}. Slack Error: {res['error']}")
         else:
             if "bot" in res:
                 self._user_info["display_name"] = res["bot"].get("name", "")
             else:
                 for attribute in ["real_name", "display_name", "email"]:
-                    self._user_info[attribute] = res["user"]["profile"].get(
-                        attribute, ""
-                    )
+                    self._user_info[attribute] = res["user"]["profile"].get(attribute, "")
 
                 team = None
                 # Normal users
@@ -115,9 +105,7 @@ class SlackPerson(Person):
                 elif res.get("user", {}).get("enterprise_user"):
                     team = res["user"]["enterprise_user"].get("enterprise_id")
                 else:
-                    log.warning(
-                        f"Failed to find team_id or enterprise_user details for userid {self._userid}."
-                    )
+                    log.warning(f"Failed to find team_id or enterprise_user details for userid {self._userid}.")
 
                 if team:
                     team_res = self._webclient.team_info(team=team)
@@ -154,13 +142,10 @@ class SlackPerson(Person):
         if self._channel_info.get("id") is None or refresh:
             res = self._webclient.conversations_info(channel=self.channelid)
             if res["ok"] is False:
-                raise RoomDoesNotExistError(
-                    f"No channel with ID {self._channelid} exists.  Slack error {res['error']}"
-                )
+                raise RoomDoesNotExistError(f"No channel with ID {self._channelid} exists.  Slack error {res['error']}")
             if res["channel"]["id"] != self._channelid:
                 raise ValueError(
-                    "Inconsistent data detected.  "
-                    f"{res['channel']['id']} does not equal {self._channelid}"
+                    f"Inconsistent data detected.  {res['channel']['id']} does not equal {self._channelid}"
                 )
             for attribute in ["name", "user", "is_im", "is_mpim", "id"]:
                 self._channel_info[attribute] = res["channel"].get(attribute)

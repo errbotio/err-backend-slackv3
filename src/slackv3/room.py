@@ -1,13 +1,7 @@
 import logging
 import sys
 
-from errbot.backends.base import (
-    Room,
-    RoomDoesNotExistError,
-    RoomError,
-    RoomOccupant,
-    UserDoesNotExistError,
-)
+from errbot.backends.base import Room, RoomDoesNotExistError, RoomError, RoomOccupant, UserDoesNotExistError
 
 from .lib import USER_IS_BOT_HELPTEXT, SlackAPIResponseError
 from .person import SlackPerson
@@ -107,10 +101,7 @@ class SlackRoom(Room):
                 "is_mpim": channel.get("is_mpim", None),
             }
         else:
-            log.exception(
-                f"Failed to fetch information for channel id {channelid}."
-                f"  Slack error {res['error']}"
-            )
+            log.exception(f"Failed to fetch information for channel id {channelid}.  Slack error {res['error']}")
 
     @property
     def private(self):
@@ -163,9 +154,7 @@ class SlackRoom(Room):
         try:
             if private:
                 log.info(f"Creating private conversation {self}.")
-                self._bot.slack_web.conversations_create(
-                    name=self.name, is_private=True
-                )
+                self._bot.slack_web.conversations_create(name=self.name, is_private=True)
             else:
                 log.info(f"Creating conversation {self}.")
                 self._bot.slack_web.conversations_create(name=self.name)
@@ -240,22 +229,14 @@ class SlackRoom(Room):
             )
             if res["ok"] is True:
                 for member in res["members"]:
-                    occupants.append(
-                        SlackRoomOccupant(self._webclient, member, self.id, self._bot)
-                    )
+                    occupants.append(SlackRoomOccupant(self._webclient, member, self.id, self._bot))
                 cursor = res["response_metadata"]["next_cursor"]
             else:
-                log.exception(
-                    f"Unable to fetch members in conversation {self.id}."
-                    f"  Slack error {res['error']}"
-                )
+                log.exception(f"Unable to fetch members in conversation {self.id}.  Slack error {res['error']}")
         return occupants
 
     def invite(self, *args):
-        users = {
-            user["name"]: user["id"]
-            for user in self._webclient.api_call("users.list")["members"]
-        }
+        users = {user["name"]: user["id"] for user in self._webclient.api_call("users.list")["members"]}
 
         for user in args:
             if user not in users:
@@ -272,9 +253,7 @@ class SlackRoom(Room):
                 if response["error"] == "user_is_bot":
                     raise RoomError(f"Unable to invite people. {USER_IS_BOT_HELPTEXT}")
                 elif response["error"] != "already_in_channel":
-                    raise SlackAPIResponseError(
-                        error=f'Slack API call to {method} failed: {response["error"]}.'
-                    )
+                    raise SlackAPIResponseError(error=f"Slack API call to {method} failed: {response['error']}.")
 
     def __eq__(self, other):
         if not isinstance(other, SlackRoom):
